@@ -6,7 +6,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import {removeBackground} from "@imgly/background-removal-node";
+import { RemoveBgResult, RemoveBgError, removeBackgroundFromImageFile } from "remove.bg";
 
 dotenv.config();
 
@@ -46,22 +46,31 @@ app.post('/remove-background', upload2.single('image'), async (req: Request, res
 
         const localFolderPath = path.join(__dirname, 'uploads');
         if (!fs.existsSync(localFolderPath)) {
-            fs.mkdirSync(localFolderPath);
+            fs.mkdirSync(localFolderPath, { recursive: true });
         }
+
         const localFilePath = path.join(localFolderPath, req.file.originalname);
         fs.writeFileSync(localFilePath, req.file.buffer);
 
-        removeBackground(localFilePath).then(async (blob: Blob) => {
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            fs.unlinkSync(localFilePath);
-            res.contentType('image/png');
-            res.send(buffer);
-        }).catch((error: Error) => {
-            console.error('Error:', error);
-            res.status(500).send('Internal Server Error: Failed to remove background');
+        const result: RemoveBgResult = await removeBackgroundFromImageFile({
+            path: localFilePath,
+            apiKey: process.env.REMOVE_BG_API_KEY,
+            size: "preview",
+            type: "product",
+            scale: "80%",
+            crop: true,
         });
-        
+
+        const outputFilePath = path.join(localFolderPath, `no-bg-${req.file.originalname}`);
+        fs.writeFileSync(outputFilePath, result.base64img, { encoding: 'base64' });
+
+        res.sendFile(outputFilePath);
+
+        setTimeout(() => {
+            fs.unlink(localFilePath, err => { if (err) console.error(`Error deleting file ${localFilePath}`, err); });
+            fs.unlink(outputFilePath, err => { if (err) console.error(`Error deleting file ${outputFilePath}`, err); });
+        }, 1000);
+
     } catch (error) {
         console.error('Error:', error);
         res.status(500).send('Internal Server Error');
