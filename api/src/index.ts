@@ -6,6 +6,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import {removeBackground} from "@imgly/background-removal-node";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ const app = express();
 const port = 3000;
 
 const upload = multer({ storage: multer.memoryStorage()});
+const upload2 = multer({ storage: multer.memoryStorage() });
 
 const ClothingType = z.enum(['HEADWEAR', 'TOP', 'OUTERWEAR', 'BOTTOM', 'FOOTWEAR']);
 
@@ -35,6 +37,37 @@ const ClothingSchema = z.object({
     temperature: ClothingWeather,
     description: z.string(),
 });
+
+app.post('/remove-background', upload2.single('image'), async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send('No image uploaded');
+        }
+
+        const localFolderPath = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(localFolderPath)) {
+            fs.mkdirSync(localFolderPath);
+        }
+        const localFilePath = path.join(localFolderPath, req.file.originalname);
+        fs.writeFileSync(localFilePath, req.file.buffer);
+
+        removeBackground(localFilePath).then(async (blob: Blob) => {
+            const arrayBuffer = await blob.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            fs.unlinkSync(localFilePath);
+            res.contentType('image/png');
+            res.send(buffer);
+        }).catch((error: Error) => {
+            console.error('Error:', error);
+            res.status(500).send('Internal Server Error: Failed to remove background');
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 
 app.post('/classify-clothing', upload.single('image'), async (req: Request, res: Response) => {
     try {
