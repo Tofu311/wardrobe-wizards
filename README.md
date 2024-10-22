@@ -7,7 +7,7 @@ npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173/) with your browser to see the result.
 
-## Mobile
+## Mobile (Flutter)
 
 > Flutter and Android Studio/Xcode needs to be installed to build & run mobile app
 ```curl
