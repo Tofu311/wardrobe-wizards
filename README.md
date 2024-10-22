@@ -9,7 +9,7 @@ Open [http://localhost:5173](http://localhost:5173/) with your browser to see th
 
 ## Mobile (Flutter)
 
-> Flutter and Android Studio/Xcode needs to be installed to build & run mobile app
+> Flutter and Android Studio/Xcode need to be installed to build & run mobile app
 ```curl
 flutter run
 ```
