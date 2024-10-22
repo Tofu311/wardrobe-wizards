@@ -7,6 +7,12 @@ npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173/) with your browser to see the result.
 
+## Mobile
+
+> Flutter and Android Studio/Xcode needs to be installed to build & run mobile app
+```curl
+flutter run
+```
 
 ## API (Node + Typescript + Express)
 > You must create a .env file in the api folder, with the OPENAI_API_KEY=YOUR_KEY included in it.
