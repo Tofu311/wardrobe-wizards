@@ -120,6 +120,21 @@ app.post('/classify-clothing', upload.single('image'), async (req: Request, res:
     }
 });
 
+//login endpoint
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    //login example till I find a real one
+    const USER = 'admin';
+    const PASS = 'password123';
+
+    if (username === USER && password === PASS) {
+        res.status(200).json({ message: 'Login successful!' });
+    } else {
+        res.status(401).json({ message: 'Invalid credentials' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
