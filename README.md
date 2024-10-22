@@ -1,5 +1,5 @@
 # Wardrobe Wizards
-## Frontend (NextJS + Typescript + React + TailwindCSS)
+## Frontend (React + Typescript + TailwindCSS)
 
 First, run the development server:
 ```curl
