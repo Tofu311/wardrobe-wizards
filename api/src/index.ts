@@ -7,6 +7,10 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { RemoveBgResult, RemoveBgError, removeBackgroundFromImageFile } from "remove.bg";
+import mongoose from 'mongoose';
+
+const User = require('../models/user.model.js');
+const userRoute = require('../routes/user.route.js');
 
 dotenv.config();
 
@@ -20,6 +24,13 @@ const client = new OpenAI({
 
 const app = express();
 const port = 3000;
+
+// Middleware configuration
+app.use(express.json());
+app.use(express.urlencoded({ extended: false}));
+
+// API routing
+app.use('/api/users', userRoute)
 
 const upload = multer({ storage: multer.memoryStorage()});
 const upload2 = multer({ storage: multer.memoryStorage() });
@@ -135,6 +146,14 @@ app.post('/login', (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+// Database connection
+mongoose.connect(process.env.DATABASE_URL).then(() => {
+    console.log("Connected to MongoDB database")
+
+    app.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}`);
+    });
+})
+.catch(() => {
+    console.log("Connection to MongoDB database failed")
+})
