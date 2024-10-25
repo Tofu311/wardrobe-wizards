@@ -147,7 +147,7 @@ app.post('/login', (req, res) => {
 });
 
 // Database connection
-mongoose.connect(process.env.DATABASE_URL).then(() => {
+mongoose.connect(process.env.DATABASE_URL as string).then(() => {
     console.log("Connected to MongoDB database")
 
     app.listen(port, () => {
