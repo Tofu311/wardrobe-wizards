@@ -136,8 +136,8 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
     //login example till I find a real one
-    const USER = 'admin';
-    const PASS = 'password123';
+    const USER = 'Benji';
+    const PASS = '123';
 
     if (username === USER && password === PASS) {
         res.status(200).json({ message: 'Login successful!' });
