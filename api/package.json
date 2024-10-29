@@ -14,8 +14,10 @@
   "dependencies": {
     "@imgly/background-removal-node": "^1.4.5",
     "@types/multer": "^1.4.12",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.2",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.68.1",
