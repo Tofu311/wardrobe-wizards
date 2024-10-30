@@ -1,0 +1,38 @@
+/* stylesheets/LoginPage.module.css */
+
+.backgroundContainer {
+  background-image: url('/assets/images/star-background.jpeg');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formContainer {
+  background-color: #73628A; /* Purple background */
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 100%; /* Responsive width */
+  color: white; /* Text color for better readability */
+}
+
+.sideBox {
+  background-color: #CBC5EA;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 100%; /* Responsive width */
+  color: black; /* Text color for better readability */
+}
+
+.outerContainer {
+  display: flex; /* Flexbox for side-by-side layout */
+  align-items: stretch; /* Stretch to make both boxes the same height */
+  gap: 0rem; /* Space between the two boxes */
+  width: 55%; /* Responsive width */
+  height: 100%; /* Responsive height */
+}
