@@ -44,8 +44,11 @@ jobs:
           USER: root
         run: |
           # Write the SSH private key to a temporary file
-          printf "%s" "${{ secrets.SSH_KEY }}" > /tmp/deploy_key
+          echo "${{ secrets.SSH_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
+
+          # Test SSH connection with verbose output
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no -v $USER@$HOST exit
 
           # SSH into the server and pull & run the Docker containers
           ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no $USER@$HOST << EOF
