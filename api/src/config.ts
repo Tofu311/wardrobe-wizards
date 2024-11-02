@@ -14,6 +14,7 @@ if (!process.env.JWT_SECRET || !process.env.DATABASE_URL || !process.env.OPENAI_
     throw new Error('Missing required environment variables');
 }
 
+// Fill in the environment variables
 export const config: Config = {
     port: parseInt(process.env.PORT || '3000', 10),
     databaseUrl: process.env.DATABASE_URL,
