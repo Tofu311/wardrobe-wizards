@@ -41,7 +41,7 @@ jobs:
       - name: Deploy to DigitalOcean
         env:
           SSH_KEY: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
-          HOST: your-droplet-ip
+          HOST: "134.209.125.222"
           USER: root
         run: |
           ssh -i $SSH_KEY -o StrictHostKeyChecking=no $USER@$HOST << EOF
