@@ -44,7 +44,7 @@ jobs:
           USER: root
         run: |
           # Write the SSH private key to a temporary file
-          echo "${{ secrets.SSH_KEY }}" > /tmp/deploy_key
+          printf "%s" "${{ secrets.SSH_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
 
           # SSH into the server and pull & run the Docker containers
