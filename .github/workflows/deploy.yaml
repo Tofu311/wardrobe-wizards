@@ -40,11 +40,15 @@ jobs:
 
       - name: Deploy to DigitalOcean
         env:
-          SSH_KEY: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
           HOST: "134.209.125.222"
           USER: root
         run: |
-          ssh -i $SSH_KEY -o StrictHostKeyChecking=no $USER@$HOST << EOF
+          # Write the SSH private key to a temporary file
+          echo "${{ secrets.SSH_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+
+          # SSH into the server and pull & run the Docker containers
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no $USER@$HOST << EOF
             docker pull mbruckert/wardrobe-wizard-backend:latest
             docker pull mbruckert/wardrobe-wizard-frontend:latest
             docker stop backend || true && docker rm backend || true
