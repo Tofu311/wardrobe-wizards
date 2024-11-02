@@ -5,11 +5,11 @@ FROM node:18
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm install
 
 # Copy the rest of the app
-COPY . .
+COPY api/. .
 
 # Expose the port the app runs on
 EXPOSE 3000
