@@ -61,8 +61,6 @@ function LoginPage() {
   const toggleForm = () => {
     setIsLogin((prev) => !prev); // Toggle the state
     form.reset(); // Reset the form when toggling
-
-
   };
 
   return (
@@ -117,7 +115,9 @@ function LoginPage() {
         {/* Hide Login */}
         {!isLogin && (
           <div className={`${styles.welcomeContainer}  ${styles.roundedRight}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to Wardrobe Wizard</h1>
+              <h1 className="text-4xl font-bold mb-6">Welcome to</h1> 
+              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
+              <h1>Wardrobe Wizard</h1>
           </div>
         )}
         
@@ -125,7 +125,9 @@ function LoginPage() {
         {/* Hide SignUp */}
         {isLogin && (
           <div className={`${styles.welcomeContainer} ${styles.roundedLeft}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to Wardrobe Wizard</h1>
+              <h1 className="text-4xl font-bold mb-6">Welcome to </h1>
+              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
+              <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1> 
           </div>
         )}
         {/* Login Form */}

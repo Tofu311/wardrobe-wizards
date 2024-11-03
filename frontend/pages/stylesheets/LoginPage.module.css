@@ -21,11 +21,22 @@
 }
 
 .welcomeContainer {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
   background-color: #CBC5EA;
   padding: 2rem;
   width: 100%; /* Responsive width */
   height: 500px;
   color: black; /* Text color for better readability */
+  align-items: center;
+  gap: 15px;
+  justify-content: center; /* Center items vertically within the container */
+  text-align: center; /* Center-align text */
+}
+
+.loginLogo {
+  width: 70%; /* Adjust width as needed */
+  height: auto;
 }
 
 .outerContainer {
