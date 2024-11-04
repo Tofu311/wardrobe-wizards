@@ -52,10 +52,42 @@ function LoginPage() {
     },
   });
 
-  // Define the submit handler
-  function onSubmit(values: { username: string; password: string; email?: string }) {
-    console.log(`${isLogin ? "Login" : "Registration"} data:`, values);
+  async function registerUser() {
+    try {
+      const response = await fetch("http://localhost:3000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form.getValues()),
+      });
+
+      if (response.ok) {
+        console.log("User registered successfully.");
+      } else {
+        console.error("Failed to register user.");
+      }
+    }
+    catch (error) {
+      console.error("Failed to register user: ", error);
+    }
   }
+
+  // Define the submit handler
+  async function onSubmit() {
+    try {
+    //console.log(`${isLogin ? "Login" : "Registration"} data:`, values);
+      if (isLogin) {
+        // Login
+      } else {
+        // Register
+        await registerUser();
+      }
+    }
+    catch(error) {
+      console.error("Failed to submit data: ", error);
+    }  
+}
 
   // Function to toggle between login and registration
   const toggleForm = () => {
