@@ -17,5 +17,5 @@ RUN npm run build
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the app
-CMD ["npm", "start"]
+# Start the app with environment variables
+CMD ["sh", "-c", "OPENAI_API_KEY=$OPENAI_API_KEY REMOVE_BG_API_KEY=$REMOVE_BG_API_KEY DATABASE_URI=$DATABASE_URI JWT_SECRET=$JWT_SECRET npm start"]
