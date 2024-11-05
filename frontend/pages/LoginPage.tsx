@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
+
+// local
+const API_ROOT = 'http://api.wardrobewizard.com/api';//http://localhost:3000/api';
+//prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -51,21 +55,26 @@ const signUpSchema = z.object({
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true); // State to track the current form
 
+  const loginDefaults = {
+    username: "",
+    password: "",
+  };
+  const signUpDefaults = {
+    name: "",
+    username: "",
+    password: "",
+    email: "",
+    geolocation: "",
+  };
   // Initialize the form with useForm for login
   const form = useForm({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
-    defaultValues: {
-      name: "",
-      username: "",
-      password: "",
-      email: "", 
-      geolocation: "",
-    },
+    defaultValues: isLogin ? loginDefaults : signUpDefaults,
   });
 
   async function registerUser() {
     try {
-      const response = await fetch("http://localhost:3000/api/users", {
+      const response = await fetch(`${API_ROOT}/users/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +95,7 @@ function LoginPage() {
 
   async function loginUser() {
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const response = await fetch(`${API_ROOT}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,6 +135,13 @@ function LoginPage() {
     setIsLogin((prev) => !prev); // Toggle the state
     form.reset(); // Reset the form when toggling
   };
+
+  useEffect(() => {
+    form.reset(isLogin ? loginDefaults : signUpDefaults, {
+      keepDefaultValues: true,
+    });
+  }, [isLogin]);
+  
 
   return (
     <div className={styles.backgroundContainer}>
