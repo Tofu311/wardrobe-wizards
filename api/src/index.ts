@@ -13,7 +13,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/users', userRoutes);
 app.use('/api/clothing', clothingRoutes);
 
-// This pipeline will never work
+// hello world
+app.get('/', (req, res) => {
+    res.send('Hello World! This is the Wardrobe Wizard API.');
+});
 
 mongoose.connect(config.databaseUrl)
     .then(() => {
@@ -26,3 +29,4 @@ mongoose.connect(config.databaseUrl)
         console.error('Database connection failed:', error);
         process.exit(1);
     });
+    
