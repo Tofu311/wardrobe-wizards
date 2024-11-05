@@ -44,7 +44,7 @@ jobs:
           USER: root
           PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-            sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER"@"$HOST" << EOF
+          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER@$HOST" << EOF
 
             # Pull the latest Docker images
             docker pull mbruckert/wardrobe-wizard-backend:latest
