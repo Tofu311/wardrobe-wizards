@@ -58,5 +58,5 @@ jobs:
             docker run -d --name backend -p 3000:3000 mbruckert/wardrobe-wizard-backend:latest
 
             # Run the frontend container
-            docker run -d --name frontend -p 80:80 mbruckert/wardrobe-wizard-frontend:latest
+            docker run -d --name frontend -p 8080:80 mbruckert/wardrobe-wizard-frontend:latest
           EOF
