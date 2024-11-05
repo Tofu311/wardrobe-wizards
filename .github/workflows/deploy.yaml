@@ -43,13 +43,21 @@ jobs:
           HOST: ${{ secrets.DROPLET_IP }}
           USER: root
           PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER@$HOST" << EOF
+          # Export environment variables
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          export REMOVE_BG_API_KEY="${{ secrets.REMOVE_BG_API_KEY }}"
+          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
+          # Verify variables are set
+          echo "OPENAI_API_KEY is $OPENAI_API_KEY"
+          echo "REMOVE_BG_API_KEY is $REMOVE_BG_API_KEY"
+          echo "DATABASE_URL is $DATABASE_URL"
+          echo "JWT_SECRET is $JWT_SECRET"
+
+          # SSH into the server and execute commands
+          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER@$HOST" << EOF
             # Pull the latest Docker images
             docker pull mbruckert/wardrobe-wizard-backend:latest
             docker pull mbruckert/wardrobe-wizard-frontend:latest
@@ -60,11 +68,10 @@ jobs:
 
             # Run the backend container
             docker run -d --name backend -p 3000:3000 \
-              --dns=8.8.8.8 \
-              -e OPENAI_API_KEY=$OPENAI_API_KEY \
-              -e REMOVE_BG_API_KEY=$REMOVE_BG_API_KEY \
-              -e DATABASE_URL=$DATABASE_URL \
-              -e JWT_SECRET=$JWT_SECRET \
+              -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+              -e REMOVE_BG_API_KEY="$REMOVE_BG_API_KEY" \
+              -e DATABASE_URL="$DATABASE_URL" \
+              -e JWT_SECRET="$JWT_SECRET" \
               mbruckert/wardrobe-wizard-backend:latest
 
             # Run the frontend container
