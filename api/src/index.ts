@@ -13,6 +13,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/users', userRoutes);
 app.use('/api/clothing', clothingRoutes);
 
+// Will this pipeline work?
+
 mongoose.connect(config.databaseUrl)
     .then(() => {
         console.log('Connected to MongoDB');
