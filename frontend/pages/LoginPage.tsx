@@ -23,6 +23,10 @@ const loginSchema = z.object({
 
 // Define the schema for registration form validation
 const signUpSchema = z.object({
+  name: z
+  .string()
+  .min(1, { message: "Please enter your first name.", }),
+
   username: z
   .string()
   .min(1, { message: "Please enter a username.", })
@@ -37,6 +41,11 @@ const signUpSchema = z.object({
   .string()
   .min(1, { message: "Please enter your email address.", })
   .email({ message: "Invalid email address.", }),
+
+  geolocation: z
+  .string()
+  .min(1, { message: "Please enter your geolocation.", }),
+
 });
 
 function LoginPage() {
@@ -46,9 +55,11 @@ function LoginPage() {
   const form = useForm({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
     defaultValues: {
+      name: "",
       username: "",
       password: "",
       email: "", 
+      geolocation: "",
     },
   });
 
@@ -73,12 +84,33 @@ function LoginPage() {
     }
   }
 
+  async function loginUser() {
+    try {
+      const response = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form.getValues()),
+      });
+
+      if (!response.ok) {
+        // create error div
+        console.error("Invalid Credentials.");
+      }
+    } 
+    catch (error) 
+    {
+      console.error("Failed to login user: ", error);
+    }
+  }
+
   // Define the submit handler
   async function onSubmit() {
     try {
-    //console.log(`${isLogin ? "Login" : "Registration"} data:`, values);
       if (isLogin) {
         // Login
+        await loginUser();
       } else {
         // Register
         await registerUser();
@@ -107,6 +139,15 @@ function LoginPage() {
               <h2 className="text-xl font-bold mb-6">Sign Up</h2>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={styles.labels}>Username</FormLabel>
+                      <FormControl>
+                        <Input className={styles.inputField} placeholder="Enter your Name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   <FormField control={form.control} name="username" render={({ field }) => (
                     <FormItem>
                       <FormLabel className={styles.labels}>Username</FormLabel>
@@ -130,6 +171,15 @@ function LoginPage() {
                       <FormLabel className={styles.labels}>Email</FormLabel>
                       <FormControl>
                         <Input className={styles.inputField} type="email" placeholder="Enter your email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="geolocation" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={styles.labels}>Geolocation</FormLabel>
+                      <FormControl>
+                        <Input className={styles.inputField} placeholder="Enter your geolocation" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

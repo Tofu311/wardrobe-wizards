@@ -8,6 +8,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { RemoveBgResult, RemoveBgError, removeBackgroundFromImageFile } from "remove.bg";
 import mongoose from 'mongoose';
+import cors from 'cors'
 
 const User = require('../models/user.model.js');
 const userRoute = require('../routes/user.route.js');
@@ -24,6 +25,13 @@ const client = new OpenAI({
 
 const app = express();
 const port = 3000;
+
+// Uncomment for local testing
+app.use(cors({
+    origin: 'http://localhost:5173', // Adjust to your frontend's port
+    credentials: true 
+  }));
+  
 
 // Middleware configuration
 app.use(express.json());
@@ -146,14 +154,14 @@ app.post('/login', (req, res) => {
     }
 });
 
-// Database connection
-mongoose.connect(process.env.DATABASE_URL as string).then(() => {
-    console.log("Connected to MongoDB database")
+// // Database connection
+// mongoose.connect(process.env.DATABASE_URL as string).then(() => {
+//     console.log("Connected to MongoDB database")
 
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
     });
-})
-.catch(() => {
-    console.log("Connection to MongoDB database failed")
-})
+// })
+// .catch(() => {
+//     console.log("Connection to MongoDB database failed")
+// })
