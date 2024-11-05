@@ -39,20 +39,9 @@ jobs:
         run: docker push mbruckert/wardrobe-wizard-frontend:latest
 
       - name: Deploy to DigitalOcean
-        env:
-          HOST: "134.209.125.222"
-          USER: root
-          SSH_KEY_BASE64: ${{ secrets.SSH_KEY_BASE64 }}
         run: |
-          # Decode and write the SSH private key
-          echo "$SSH_KEY_BASE64" | base64 --decode > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
+            sshpass -p ${{ secrets.DROPLET_PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} << EOF
 
-          # Test SSH connection with verbose output
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no -v $USER@$HOST exit
-
-          # SSH into the server and execute commands
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
             # Pull the latest Docker images
             docker pull mbruckert/wardrobe-wizard-backend:latest
             docker pull mbruckert/wardrobe-wizard-frontend:latest
