@@ -15,43 +15,60 @@ import { Input } from "@/components/ui/input";
 import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
 
 // local
-const API_ROOT = 'http://api.wardrobewizard.com/api';//http://localhost:3000/api';
+const API_ROOT = "http://api.wardrobewizard.com/api"; //http://localhost:3000/api';
 //prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
-  username: z.string()
-  .min(1, { message: "Please enter your username." }),
+  username: z.string().min(1, { message: "Please enter your username." }),
   password: z.string().min(1, { message: "Please enter your password." }),
 });
 
 // Define the schema for registration form validation
 const signUpSchema = z.object({
-  name: z
-  .string()
-  .min(1, { message: "Please enter your first name.", }),
+  name: z.string().min(1, { message: "Please enter your first name." }),
 
   username: z
-  .string()
-  .min(1, { message: "Please enter a username.", })
-  .regex(/^[a-zA-Z0-9]+$/, { message: "Username can only contain letters (A-Z) and numbers (0-9)." }),  
+    .string()
+    .min(1, { message: "Please enter a username." })
+    .regex(/^[a-zA-Z0-9]+$/, {
+      message: "Username can only contain letters (A-Z) and numbers (0-9).",
+    }),
 
   password: z
-  .string()
-  .min(1, { message: "Please enter a password.", })
-  .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, { message: "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.", }),
+    .string()
+    .min(1, { message: "Please enter a password." })
+    .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, {
+      message:
+        "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.",
+    }),
 
   email: z
-  .string()
-  .min(1, { message: "Please enter your email address.", })
-  .email({ message: "Invalid email address.", }),
-
-  geolocation: z
-  .string()
-  .min(1, { message: "Please enter your geolocation.", }),
-
+    .string()
+    .min(1, { message: "Please enter your email address." })
+    .email({ message: "Invalid email address." }),
 });
 
+// Get user location in order to send to backend weather api
+const getUserLocation = async (): Promise<{
+  latitude: number;
+  longitude: number;
+}> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by this browser."));
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ latitude, longitude });
+        },
+        (error) =>
+          reject(new Error("Unable to retrieve location: " + error.message))
+      );
+    }
+  });
+};
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true); // State to track the current form
 
@@ -64,7 +81,6 @@ function LoginPage() {
     username: "",
     password: "",
     email: "",
-    geolocation: "",
   };
   // Initialize the form with useForm for login
   const form = useForm({
@@ -74,12 +90,19 @@ function LoginPage() {
 
   async function registerUser() {
     try {
+      // Get user's location
+      const { latitude, longitude } = await getUserLocation();
+      const data = {
+        ...form.getValues(),
+        geolocation: { coordinates: [latitude, longitude] },
+      };
+
       const response = await fetch(`${API_ROOT}/users/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form.getValues()),
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
@@ -87,29 +110,33 @@ function LoginPage() {
       } else {
         console.error("Failed to register user.");
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Failed to register user: ", error);
     }
   }
 
   async function loginUser() {
     try {
+      // Get user's location
+      const { latitude, longitude } = await getUserLocation();
+      const data = {
+        ...form.getValues(),
+        geolocation: { coordinates: [latitude, longitude] },
+      };
+
       const response = await fetch(`${API_ROOT}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form.getValues()),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         // create error div
         console.error("Invalid Credentials.");
       }
-    } 
-    catch (error) 
-    {
+    } catch (error) {
       console.error("Failed to login user: ", error);
     }
   }
@@ -124,11 +151,10 @@ function LoginPage() {
         // Register
         await registerUser();
       }
-    }
-    catch(error) {
+    } catch (error) {
       console.error("Failed to submit data: ", error);
-    }  
-}
+    }
+  }
 
   // Function to toggle between login and registration
   const toggleForm = () => {
@@ -141,71 +167,128 @@ function LoginPage() {
       keepDefaultValues: true,
     });
   }, [isLogin]);
-  
 
   return (
     <div className={styles.backgroundContainer}>
       <div className={styles.outerContainer}>
-
-        
         {/* Sign Up Form */}
         {!isLogin && (
-          <div className={`absolute w-full transition-transform duration-500 ${isLogin ? "translate-x-full" : "translate-x-0"}`}>
+          <div
+            className={`absolute w-full transition-transform duration-500 ${
+              isLogin ? "translate-x-full" : "translate-x-0"
+            }`}
+          >
             <div className={`${styles.formContainer} ${styles.roundedLeft}`}>
               <h2 className="text-xl font-bold mb-6">Sign Up</h2>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your Name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="username" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Password</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="password" placeholder="Enter your password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Email</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="email" placeholder="Enter your email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="geolocation" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Geolocation</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your geolocation" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            placeholder="Enter your Name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>
+                          Username
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            placeholder="Enter your username"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>
+                          Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            type="password"
+                            placeholder="Enter your password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            type="email"
+                            placeholder="Enter your email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="geolocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>
+                          Geolocation
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            placeholder="Enter your geolocation"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit">Sign Up</Button>
                 </form>
               </Form>
               <p className="mt-4 text-center">
                 Already have an account?{" "}
-                <span onClick={toggleForm} className="text-blue-500 cursor-pointer hover:underline ml-1">Sign In</span>
+                <span
+                  onClick={toggleForm}
+                  className="text-blue-500 cursor-pointer hover:underline ml-1"
+                >
+                  Sign In
+                </span>
               </p>
             </div>
           </div>
@@ -213,52 +296,92 @@ function LoginPage() {
         {/* Hide Login */}
         {!isLogin && (
           <div className={`${styles.welcomeContainer}  ${styles.roundedRight}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to</h1> 
-              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
-              <h1>Wardrobe Wizard</h1>
+            <h1 className="text-4xl font-bold mb-6">Welcome to</h1>
+            <img
+              src="/assets/images/Vector.png"
+              alt="App Logo"
+              className={`${styles.loginLogo}`}
+            />
+            <h1>Wardrobe Wizard</h1>
           </div>
         )}
-        
 
         {/* Hide SignUp */}
         {isLogin && (
           <div className={`${styles.welcomeContainer} ${styles.roundedLeft}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to </h1>
-              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
-              <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1> 
+            <h1 className="text-4xl font-bold mb-6">Welcome to </h1>
+            <img
+              src="/assets/images/Vector.png"
+              alt="App Logo"
+              className={`${styles.loginLogo}`}
+            />
+            <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1>
           </div>
         )}
         {/* Login Form */}
         {isLogin && (
-          <div className={`absolute w-full transition-transform duration-500 ${isLogin ? "translate-x-0" : "translate-x-full"}`}>
+          <div
+            className={`absolute w-full transition-transform duration-500 ${
+              isLogin ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
             <div className={`${styles.formContainer} ${styles.roundedRight}`}>
               <h2 className="text-xl font-bold mb-6">Login</h2>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField control={form.control} name="username" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Password</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="password" placeholder="Enter your password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>
+                          Username
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            placeholder="Enter your username"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>
+                          Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            type="password"
+                            placeholder="Enter your password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit">Sign In</Button>
                 </form>
               </Form>
               <p className="mt-4 text-center">
                 Don't have an account?{" "}
-                <span onClick={toggleForm} className="text-blue-500 cursor-pointer hover:underline ml-1">Sign Up</span>
+                <span
+                  onClick={toggleForm}
+                  className="text-blue-500 cursor-pointer hover:underline ml-1"
+                >
+                  Sign Up
+                </span>
               </p>
             </div>
           </div>
@@ -266,6 +389,6 @@ function LoginPage() {
       </div>
     </div>
   );
-};
+}
 
 export default LoginPage;
