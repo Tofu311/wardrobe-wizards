@@ -14,9 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
 
-// local
-const API_ROOT = "http://api.wardrobewizard.com/api"; //http://localhost:3000/api';
-//prod
+const API_ROOT = 'http://localhost:3000/api'; // local
+// const API_ROOT//"http://api.wardrobewizard.com/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -26,7 +25,9 @@ const loginSchema = z.object({
 
 // Define the schema for registration form validation
 const signUpSchema = z.object({
-  name: z.string().min(1, { message: "Please enter your first name." }),
+  first_name: z.string().min(1, { message: "Please enter your first name." }),
+  
+  last_name: z.string().min(1, { message: "Please enter your last name." }),
 
   username: z
     .string()
@@ -70,6 +71,7 @@ const getUserLocation = async (): Promise<{
   });
 };
 function LoginPage() {
+  const [error, setError] = useState(""); // State to store error messages
   const [isLogin, setIsLogin] = useState(true); // State to track the current form
 
   const loginDefaults = {
@@ -77,12 +79,13 @@ function LoginPage() {
     password: "",
   };
   const signUpDefaults = {
-    name: "",
+    first_name: "",
+    last_name: "",
     username: "",
     password: "",
     email: "",
   };
-  // Initialize the form with useForm for login
+
   const form = useForm({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
     defaultValues: isLogin ? loginDefaults : signUpDefaults,
@@ -92,8 +95,10 @@ function LoginPage() {
     try {
       // Get user's location
       const { latitude, longitude } = await getUserLocation();
+      const {first_name, last_name, ...rest} = form.getValues();
       const data = {
-        ...form.getValues(),
+        name: {first: first_name, last: last_name},
+        ...rest,
         geolocation: { coordinates: [latitude, longitude] },
       };
 
@@ -104,14 +109,16 @@ function LoginPage() {
         },
         body: JSON.stringify(data),
       });
-
-      if (response.ok) {
+      if (response.status === 201) {
         console.log("User registered successfully.");
       } else {
-        console.error("Failed to register user.");
+        let data = await response.json();
+        setError(data.message || "Failed to register user.");
       }
+
     } catch (error) {
       console.error("Failed to register user: ", error);
+      setError("An error occured during registration.");
     }
   }
 
@@ -132,12 +139,16 @@ function LoginPage() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        // create error div
-        console.error("Invalid Credentials.");
+      if (response.status === 201) {
+        console.log("User logged in successfully.");
+      } else {
+        let data = await response.json();
+        setError(data.message || "Failed to login.");
       }
     } catch (error) {
       console.error("Failed to login user: ", error);
+      setError("An error occured during login.");
+
     }
   }
 
@@ -159,18 +170,19 @@ function LoginPage() {
   // Function to toggle between login and registration
   const toggleForm = () => {
     setIsLogin((prev) => !prev); // Toggle the state
-    form.reset(); // Reset the form when toggling
+    form.reset(isLogin ? signUpDefaults : loginDefaults); // Reset the form with appropriate default values
   };
 
   useEffect(() => {
-    form.reset(isLogin ? loginDefaults : signUpDefaults, {
-      keepDefaultValues: true,
-    });
+    form.reset(isLogin ? loginDefaults : signUpDefaults);
   }, [isLogin]);
+
 
   return (
     <div className={styles.backgroundContainer}>
       <div className={styles.outerContainer}>
+
+
         {/* Sign Up Form */}
         {!isLogin && (
           <div
@@ -187,14 +199,32 @@ function LoginPage() {
                 >
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>Name</FormLabel>
+                        <FormLabel className={styles.labels}>First Name</FormLabel>
                         <FormControl>
                           <Input
                             className={styles.inputField}
-                            placeholder="Enter your Name"
+                            placeholder="Enter your First Name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={styles.labels}>Last Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            className={styles.inputField}
+                            placeholder="Enter your Last Name"
                             {...field}
                           />
                         </FormControl>
@@ -259,32 +289,24 @@ function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="geolocation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Geolocation
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            className={styles.inputField}
-                            placeholder="Enter your geolocation"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <Button type="submit">Sign Up</Button>
                 </form>
               </Form>
+
+              {error && (
+                <div className="errorMessage mt-4 text-center">
+                  {error}
+                </div>
+              )}
+
               <p className="mt-4 text-center">
                 Already have an account?{" "}
                 <span
-                  onClick={toggleForm}
+                  onClick={() => {
+                    toggleForm();
+                    setError(""); // Clear the error message
+                    }}
+                  
                   className="text-blue-500 cursor-pointer hover:underline ml-1"
                 >
                   Sign In
@@ -293,6 +315,8 @@ function LoginPage() {
             </div>
           </div>
         )}
+
+
         {/* Hide Login */}
         {!isLogin && (
           <div className={`${styles.welcomeContainer}  ${styles.roundedRight}`}>
@@ -318,8 +342,10 @@ function LoginPage() {
             <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1>
           </div>
         )}
+        
         {/* Login Form */}
-        {isLogin && (
+        {isLogin && 
+        (
           <div
             className={`absolute w-full transition-transform duration-500 ${
               isLogin ? "translate-x-0" : "translate-x-full"
@@ -374,10 +400,20 @@ function LoginPage() {
                   <Button type="submit">Sign In</Button>
                 </form>
               </Form>
+
+              {error && (
+                <div className="errorMessage mt-4 text-center">
+                  {error}
+                </div>
+              )}
+
               <p className="mt-4 text-center">
                 Don't have an account?{" "}
                 <span
-                  onClick={toggleForm}
+                  onClick={() => {
+                  toggleForm();
+                  setError(""); // Clear the error message
+                  }}
                   className="text-blue-500 cursor-pointer hover:underline ml-1"
                 >
                   Sign Up

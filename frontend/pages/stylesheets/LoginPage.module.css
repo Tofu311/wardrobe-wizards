@@ -20,6 +20,10 @@
   border-radius: 0; /* Ensure it doesn't conflict */
 }
 
+.formContainer .errorMessage {
+  color: red !important;
+}
+
 .welcomeContainer {
   display: flex;
   flex-direction: column; /* Stack items vertically */
