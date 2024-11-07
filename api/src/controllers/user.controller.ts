@@ -67,6 +67,7 @@ export const register = async (
         // const { name, username, email, password, geolocation } = req.body;
         const { name, username, email, password } = req.body;
 
+
         const existingUser = await User.findOne({ 
             $or: [{ username }, { email }] 
         });
@@ -84,6 +85,7 @@ export const register = async (
             email,
             password: hashedPassword,
             // geolocation
+
         });
 
         const token = jwt.sign(
