@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model';
 import { config } from '../config';
 import { AuthRequest } from '../types';
+import { WeatherData } from '../types';
+import axios from 'axios';
 
 interface RegisterRequestBody {
     name: {
@@ -21,6 +23,40 @@ interface RegisterRequestBody {
 interface LoginRequestBody {
     username: string;
     password: string;
+    geolocation: {
+        coordinates: number[];
+    };
+}
+
+export const fetchWeather = async (latitude: number, longitude: number): Promise<WeatherData> => {
+    const apiKey = process.env.WEATHER_API_KEY;
+    const response = await axios.get(`https://api.weatherapi.com/v1/current.json`, {
+        params: { key: apiKey, q: `${latitude},${longitude}` },
+    });
+
+    const weather = response.data;
+
+    return {
+        location: {
+            lat: weather.location.lat,
+            lon: weather.location.lon,
+        },
+        current: {
+            temp_c: weather.current.temp_c,
+            temp_f: weather.current.temp_f,
+            condition: {
+                text: weather.current.condition.text,
+                icon: weather.current.condition.icon,
+            },
+            wind_mph: weather.current.wind_mph,
+            wind_degree: weather.current.wind_degree,
+            humidity: weather.current.humidity,
+            cloud: weather.current.cloud,
+            feelslike_c: weather.current.feelslike_c,
+            feelslike_f: weather.current.feelslike_f,
+            uv: weather.current.uv,
+        }
+    };
 }
 
 export const register = async (
@@ -28,7 +64,9 @@ export const register = async (
     res: Response
 ): Promise<void> => {
     try {
-        const { name, username, email, password, geolocation } = req.body;
+        // const { name, username, email, password, geolocation } = req.body;
+        const { name, username, email, password } = req.body;
+
 
         const existingUser = await User.findOne({ 
             $or: [{ username }, { email }] 
@@ -46,7 +84,8 @@ export const register = async (
             username,
             email,
             password: hashedPassword,
-            geolocation
+            // geolocation
+
         });
 
         const token = jwt.sign(
@@ -55,16 +94,31 @@ export const register = async (
             { expiresIn: '1h' }
         );
 
+        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+
         res.status(201).json({
             token,
             user: {
                 id: user._id,
                 username: user.username,
                 email: user.email
-            }
+            },
+            // weather
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating user' });
+        // Log full error details to console
+        console.error("Error in registration:", error);
+
+        if (error instanceof Error) {
+            res.status(500).json({ message: "Error occurred during registration",
+                error: error.message
+             });
+        } else {
+            res.status(500).json({
+                message: "An error occurred during registration.",
+                error: "Unknown error"
+            });
+        }
     }
 };
 
@@ -73,6 +127,7 @@ export const login = async (
     res: Response
 ): Promise<void> => {
     try {
+        // const { username, password, geolocation } = req.body;
         const { username, password } = req.body;
 
         const user = await User.findOne({ username });
@@ -87,13 +142,17 @@ export const login = async (
             { expiresIn: '1h' }
         );
 
+        
+        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+
         res.json({
             token,
             user: {
                 id: user._id,
                 username: user.username,
                 email: user.email
-            }
+            },
+            // weather
         });
     } catch (error) {
         res.status(500).json({ message: 'Error during login' });
