@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
+import { useNavigate } from "react-router-dom";
 
-const API_ROOT = 'http://localhost:3000/api'; // local
-// const API_ROOT//"http://api.wardrobewizard.com/api"; // prod
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "http://api.wardrobewizard.com/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -26,7 +27,7 @@ const loginSchema = z.object({
 // Define the schema for registration form validation
 const signUpSchema = z.object({
   first_name: z.string().min(1, { message: "Please enter your first name." }),
-  
+
   last_name: z.string().min(1, { message: "Please enter your last name." }),
 
   username: z
@@ -74,6 +75,8 @@ function LoginPage() {
   const [error, setError] = useState(""); // State to store error messages
   const [isLogin, setIsLogin] = useState(true); // State to track the current form
 
+  const navigate = useNavigate();
+
   const loginDefaults = {
     username: "",
     password: "",
@@ -95,9 +98,9 @@ function LoginPage() {
     try {
       // Get user's location
       const { latitude, longitude } = await getUserLocation();
-      const {first_name, last_name, ...rest} = form.getValues();
+      const { first_name, last_name, ...rest } = form.getValues();
       const data = {
-        name: {first: first_name, last: last_name},
+        name: { first: first_name, last: last_name },
         ...rest,
         geolocation: { coordinates: [latitude, longitude] },
       };
@@ -109,13 +112,13 @@ function LoginPage() {
         },
         body: JSON.stringify(data),
       });
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
+        navigate("/closet");
         console.log("User registered successfully.");
       } else {
         let data = await response.json();
         setError(data.message || "Failed to register user.");
       }
-
     } catch (error) {
       console.error("Failed to register user: ", error);
       setError("An error occured during registration.");
@@ -139,7 +142,8 @@ function LoginPage() {
         body: JSON.stringify(data),
       });
 
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
+        navigate("/closet");
         console.log("User logged in successfully.");
       } else {
         let data = await response.json();
@@ -148,7 +152,6 @@ function LoginPage() {
     } catch (error) {
       console.error("Failed to login user: ", error);
       setError("An error occured during login.");
-
     }
   }
 
@@ -177,12 +180,9 @@ function LoginPage() {
     form.reset(isLogin ? loginDefaults : signUpDefaults);
   }, [isLogin]);
 
-
   return (
     <div className={styles.backgroundContainer}>
       <div className={styles.outerContainer}>
-
-
         {/* Sign Up Form */}
         {!isLogin && (
           <div
@@ -202,7 +202,9 @@ function LoginPage() {
                     name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>First Name</FormLabel>
+                        <FormLabel className={styles.labels}>
+                          First Name
+                        </FormLabel>
                         <FormControl>
                           <Input
                             className={styles.inputField}
@@ -220,7 +222,9 @@ function LoginPage() {
                     name="last_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>Last Name</FormLabel>
+                        <FormLabel className={styles.labels}>
+                          Last Name
+                        </FormLabel>
                         <FormControl>
                           <Input
                             className={styles.inputField}
@@ -294,9 +298,7 @@ function LoginPage() {
               </Form>
 
               {error && (
-                <div className="errorMessage mt-4 text-center">
-                  {error}
-                </div>
+                <div className="errorMessage mt-4 text-center">{error}</div>
               )}
 
               <p className="mt-4 text-center">
@@ -305,8 +307,7 @@ function LoginPage() {
                   onClick={() => {
                     toggleForm();
                     setError(""); // Clear the error message
-                    }}
-                  
+                  }}
                   className="text-blue-500 cursor-pointer hover:underline ml-1"
                 >
                   Sign In
@@ -315,7 +316,6 @@ function LoginPage() {
             </div>
           </div>
         )}
-
 
         {/* Hide Login */}
         {!isLogin && (
@@ -342,10 +342,9 @@ function LoginPage() {
             <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1>
           </div>
         )}
-        
+
         {/* Login Form */}
-        {isLogin && 
-        (
+        {isLogin && (
           <div
             className={`absolute w-full transition-transform duration-500 ${
               isLogin ? "translate-x-0" : "translate-x-full"
@@ -402,17 +401,15 @@ function LoginPage() {
               </Form>
 
               {error && (
-                <div className="errorMessage mt-4 text-center">
-                  {error}
-                </div>
+                <div className="errorMessage mt-4 text-center">{error}</div>
               )}
 
               <p className="mt-4 text-center">
                 Don't have an account?{" "}
                 <span
                   onClick={() => {
-                  toggleForm();
-                  setError(""); // Clear the error message
+                    toggleForm();
+                    setError(""); // Clear the error message
                   }}
                   className="text-blue-500 cursor-pointer hover:underline ml-1"
                 >

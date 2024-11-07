@@ -140,7 +140,7 @@ export const login = async (
         );
 
         
-        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+        const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
 
         res.json({
             token,
@@ -149,7 +149,7 @@ export const login = async (
                 username: user.username,
                 email: user.email
             },
-            // weather
+            weather
         });
     } catch (error) {
         res.status(500).json({ message: 'Error during login' });
