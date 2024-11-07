@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
 import { useNavigate } from "react-router-dom";
 
-// const API_ROOT = "http://localhost:3000/api"; // local
-const API_ROOT = "http://api.wardrobewizard.com/api"; // prod
+const API_ROOT = "http://localhost:3000/api"; // local
+// const API_ROOT = "http://api.wardrobewizard.com/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -97,12 +97,12 @@ function LoginPage() {
   async function registerUser() {
     try {
       // Get user's location
-      const { latitude, longitude } = await getUserLocation();
+      // const { latitude, longitude } = await getUserLocation();
       const { first_name, last_name, ...rest } = form.getValues();
       const data = {
         name: { first: first_name, last: last_name },
         ...rest,
-        geolocation: { coordinates: [latitude, longitude] },
+        // geolocation: { coordinates: [latitude, longitude] },
       };
 
       const response = await fetch(`${API_ROOT}/users/register`, {
@@ -128,10 +128,10 @@ function LoginPage() {
   async function loginUser() {
     try {
       // Get user's location
-      const { latitude, longitude } = await getUserLocation();
+      // const { latitude, longitude } = await getUserLocation();
       const data = {
         ...form.getValues(),
-        geolocation: { coordinates: [latitude, longitude] },
+        // geolocation: { coordinates: [latitude, longitude] },
       };
 
       const response = await fetch(`${API_ROOT}/users/login`, {

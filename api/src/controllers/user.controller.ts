@@ -64,7 +64,8 @@ export const register = async (
     res: Response
 ): Promise<void> => {
     try {
-        const { name, username, email, password, geolocation } = req.body;
+        // const { name, username, email, password, geolocation } = req.body;
+        const { name, username, email, password } = req.body;
 
         const existingUser = await User.findOne({ 
             $or: [{ username }, { email }] 
@@ -82,7 +83,7 @@ export const register = async (
             username,
             email,
             password: hashedPassword,
-            geolocation
+            // geolocation
         });
 
         const token = jwt.sign(
@@ -124,8 +125,8 @@ export const login = async (
     res: Response
 ): Promise<void> => {
     try {
-        const { username, password, geolocation } = req.body;
-
+        // const { username, password, geolocation } = req.body;
+        const { username, password } = req.body;
 
         const user = await User.findOne({ username });
         if (!user || !(await user.matchPassword(password))) {
@@ -140,7 +141,7 @@ export const login = async (
         );
 
         
-        const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
 
         res.json({
             token,
@@ -149,7 +150,7 @@ export const login = async (
                 username: user.username,
                 email: user.email
             },
-            weather
+            // weather
         });
     } catch (error) {
         res.status(500).json({ message: 'Error during login' });
