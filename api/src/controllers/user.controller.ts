@@ -91,7 +91,7 @@ export const register = async (
             { expiresIn: '1h' }
         );
 
-        const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
 
         res.status(201).json({
             token,
@@ -100,7 +100,7 @@ export const register = async (
                 username: user.username,
                 email: user.email
             },
-            weather
+            // weather
         });
     } catch (error) {
         // Log full error details to console
@@ -126,6 +126,7 @@ export const login = async (
     try {
         const { username, password, geolocation } = req.body;
 
+
         const user = await User.findOne({ username });
         if (!user || !(await user.matchPassword(password))) {
             res.status(401).json({ message: 'Invalid credentials' });
@@ -137,7 +138,9 @@ export const login = async (
             config.jwtSecret,
             { expiresIn: '1h' }
         );
-        const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+
+        
+        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
 
         res.json({
             token,
@@ -146,7 +149,7 @@ export const login = async (
                 username: user.username,
                 email: user.email
             },
-            weather
+            // weather
         });
     } catch (error) {
         res.status(500).json({ message: 'Error during login' });

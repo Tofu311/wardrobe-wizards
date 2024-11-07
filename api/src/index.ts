@@ -7,14 +7,8 @@ import cors from 'cors';
 
 const app = express();
 
-// Uncomment for local testing
-app.use(cors({
-    origin: 'http://localhost:5173', // Adjust to your frontend's port
-    credentials: true 
-  }));
-  
+app.use(cors());
 
-// Middleware configuration
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
