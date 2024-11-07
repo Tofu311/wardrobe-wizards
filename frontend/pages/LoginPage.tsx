@@ -12,10 +12,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
+import styles from "./stylesheets/LoginPage.module.css";
 import { useNavigate } from "react-router-dom";
 
-//const API_ROOT = "http://localhost:3000/api"; // local
+// const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "http://api.wardrobewizard.com/api"; // prod
 
 // Define the schema for login form validation
@@ -27,16 +27,13 @@ const loginSchema = z.object({
 // Define the schema for registration form validation
 const signUpSchema = z.object({
   first_name: z.string().min(1, { message: "Please enter your first name." }),
-
   last_name: z.string().min(1, { message: "Please enter your last name." }),
-
   username: z
     .string()
     .min(1, { message: "Please enter a username." })
     .regex(/^[a-zA-Z0-9]+$/, {
       message: "Username can only contain letters (A-Z) and numbers (0-9).",
     }),
-
   password: z
     .string()
     .min(1, { message: "Please enter a password." })
@@ -44,44 +41,28 @@ const signUpSchema = z.object({
       message:
         "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.",
     }),
-
   email: z
     .string()
     .min(1, { message: "Please enter your email address." })
     .email({ message: "Invalid email address." }),
 });
 
-// Get user location in order to send to backend weather api
-const getUserLocation = async (): Promise<{
-  latitude: number;
-  longitude: number;
-}> => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation is not supported by this browser."));
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          resolve({ latitude, longitude });
-        },
-        (error) =>
-          reject(new Error("Unable to retrieve location: " + error.message))
-      );
-    }
-  });
-};
+// Infer types from the schemas
+type LoginSchema = z.infer<typeof loginSchema>;
+type SignUpSchema = z.infer<typeof signUpSchema>;
+
 function LoginPage() {
-  const [error, setError] = useState(""); // State to store error messages
-  const [isLogin, setIsLogin] = useState(true); // State to track the current form
+  const [error, setError] = useState<string>("");
+  const [isLogin, setIsLogin] = useState(true);
 
   const navigate = useNavigate();
 
-  const loginDefaults = {
+  const loginDefaults: LoginSchema = {
     username: "",
     password: "",
   };
-  const signUpDefaults = {
+
+  const signUpDefaults: SignUpSchema = {
     first_name: "",
     last_name: "",
     username: "",
@@ -89,20 +70,19 @@ function LoginPage() {
     email: "",
   };
 
-  const form = useForm({
+  const form = useForm<LoginSchema | SignUpSchema>({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
     defaultValues: isLogin ? loginDefaults : signUpDefaults,
   });
 
   async function registerUser() {
     try {
-      // Get user's location
-      // const { latitude, longitude } = await getUserLocation();
-      const { first_name, last_name, ...rest } = form.getValues();
+      const formData = form.getValues() as SignUpSchema;
+      const { first_name, last_name, ...rest } = formData;
+
       const data = {
         name: { first: first_name, last: last_name },
         ...rest,
-        // geolocation: { coordinates: [latitude, longitude] },
       };
 
       const response = await fetch(`${API_ROOT}/users/register`, {
@@ -112,27 +92,23 @@ function LoginPage() {
         },
         body: JSON.stringify(data),
       });
+
       if (response.status === 201 || response.status === 200) {
         navigate("/closet");
         console.log("User registered successfully.");
       } else {
-        let data = await response.json();
+        const data = await response.json();
         setError(data.message || "Failed to register user.");
       }
     } catch (error) {
       console.error("Failed to register user: ", error);
-      setError("An error occured during registration.");
+      setError("An error occurred during registration.");
     }
   }
 
   async function loginUser() {
     try {
-      // Get user's location
-      // const { latitude, longitude } = await getUserLocation();
-      const data = {
-        ...form.getValues(),
-        // geolocation: { coordinates: [latitude, longitude] },
-      };
+      const data = form.getValues() as LoginSchema;
 
       const response = await fetch(`${API_ROOT}/users/login`, {
         method: "POST",
@@ -146,23 +122,20 @@ function LoginPage() {
         navigate("/closet");
         console.log("User logged in successfully.");
       } else {
-        let data = await response.json();
+        const data = await response.json();
         setError(data.message || "Failed to login.");
       }
     } catch (error) {
       console.error("Failed to login user: ", error);
-      setError("An error occured during login.");
+      setError("An error occurred during login.");
     }
   }
 
-  // Define the submit handler
   async function onSubmit() {
     try {
       if (isLogin) {
-        // Login
         await loginUser();
       } else {
-        // Register
         await registerUser();
       }
     } catch (error) {
@@ -170,15 +143,14 @@ function LoginPage() {
     }
   }
 
-  // Function to toggle between login and registration
   const toggleForm = () => {
-    setIsLogin((prev) => !prev); // Toggle the state
-    form.reset(isLogin ? signUpDefaults : loginDefaults); // Reset the form with appropriate default values
+    setIsLogin((prev) => !prev);
+    form.reset(isLogin ? signUpDefaults : loginDefaults);
   };
 
   useEffect(() => {
     form.reset(isLogin ? loginDefaults : signUpDefaults);
-  }, [isLogin]);
+  }, [isLogin, form]);
 
   return (
     <div className={styles.backgroundContainer}>

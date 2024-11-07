@@ -65,7 +65,7 @@ export const register = async (
 ): Promise<void> => {
     try {
         // const { name, username, email, password, geolocation } = req.body;
-        const { name, username, email, password } = req.body;
+        const { name, username, email, password, geolocation } = req.body;
 
 
         const existingUser = await User.findOne({ 
@@ -84,8 +84,7 @@ export const register = async (
             username,
             email,
             password: hashedPassword,
-            // geolocation
-
+            geolocation
         });
 
         const token = jwt.sign(
