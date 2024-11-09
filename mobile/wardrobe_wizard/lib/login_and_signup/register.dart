@@ -101,7 +101,8 @@ class _RegisterPageState extends State<Register> {
                       'email': userInfoControllers[4].text,
                     };
                     debugPrint(userInfo.toString());
-                    http.post(
+                    http
+                        .post(
                       Uri.parse(
                           'https://api.wardrobewizard.fashion/api/users/register'),
                       headers: <String, String>{

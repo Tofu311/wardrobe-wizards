@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:wardrobe_wizard/closet.dart';
 import 'package:wardrobe_wizard/login_and_signup/pwdreset.dart';
 import 'package:wardrobe_wizard/login_and_signup/register.dart';
 
@@ -55,6 +56,16 @@ class _LoginPageState extends State<Login> {
               padding: const EdgeInsets.only(top: 25),
               child: ElevatedButton(
                 onPressed: () {
+                  //TEMPORARY: Navigate to closet page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const Closet(title: 'My Closet');
+                      },
+                    ),
+                  );
+                  /*
                   http
                       .post(
                     Uri.parse(
@@ -66,7 +77,7 @@ class _LoginPageState extends State<Login> {
                     body: jsonEncode(
                       <String, String>{
                         "username": "markb",
-                        "password": "password"
+                        "password": "password"                        
                       },
                     ),
                   )
@@ -76,8 +87,10 @@ class _LoginPageState extends State<Login> {
                         content: Text('Response: ${response.body}'),
                         backgroundColor: Colors.green,
                       ),
-                    );
-                  });
+                    );                    
+                  },
+                  );
+                  */
                 },
                 child: const Padding(
                   padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
