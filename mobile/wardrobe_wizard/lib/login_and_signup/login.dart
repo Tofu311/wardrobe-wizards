@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:wardrobe_wizard/login_and_signup/pwdreset.dart';
 import 'package:wardrobe_wizard/login_and_signup/register.dart';
 
@@ -35,7 +38,7 @@ class _LoginPageState extends State<Login> {
               child: TextField(
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Email',
+                  labelText: 'Username',
                 ),
               ),
             ),
@@ -52,12 +55,29 @@ class _LoginPageState extends State<Login> {
               padding: const EdgeInsets.only(top: 25),
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('API call not yet implemented'),
-                      backgroundColor: Colors.red,
+                  http
+                      .post(
+                    Uri.parse(
+                        'https://api.wardrobewizard.fashion/api/users/login'),
+                    headers: <String, String>{
+                      "Content-Type": "application/json"
+                    },
+                    //Need to use jsonEncode when passing  map to server
+                    body: jsonEncode(
+                      <String, String>{
+                        "username": "markb",
+                        "password": "password"
+                      },
                     ),
-                  );
+                  )
+                      .then((response) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Response: ${response.body}'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  });
                 },
                 child: const Padding(
                   padding: EdgeInsets.fromLTRB(50, 0, 50, 0),

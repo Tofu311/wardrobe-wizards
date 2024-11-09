@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Register extends StatefulWidget {
   const Register({super.key, required this.title});
@@ -9,61 +12,121 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<Register> {
+  List<TextEditingController> userInfoControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(        
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,        
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Padding(
-              padding: EdgeInsets.only(bottom: 50),
-              child: Text(
-                'Ready to become a wardrobe wizard?\nSign up now!',
-                style: TextStyle(fontSize: 36),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Email',
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 50, 0, 50),
+                child: Text(
+                  'Ready to become a wardrobe wizard?\nSign up now!',
+                  style: TextStyle(fontSize: 36),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Password',
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[0],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'First Name',
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 25),
-              child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('API call not yet implemented'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
-                  child: Text('Sign Up'),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[1],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Last Name',
+                  ),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[2],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Username',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[3],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Password',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[4],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Email',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 25),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Map<String, String> userInfo = {
+                      'name':
+                          '${userInfoControllers[0].text} ${userInfoControllers[1].text}',
+                      'username': userInfoControllers[2].text,
+                      'password': userInfoControllers[3].text,
+                      'email': userInfoControllers[4].text,
+                    };
+                    debugPrint(userInfo.toString());
+                    http.post(
+                      Uri.parse(
+                          'https://api.wardrobewizard.fashion/api/users/register'),
+                      headers: <String, String>{
+                        "Content-Type": "application/json"
+                      },
+                      //Need to use jsonEncode when passing  map to server
+                      body: jsonEncode(userInfo),
+                    )
+                        .then((response) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Response: ${response.body}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    });
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
+                    child: Text('Sign Up'),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
