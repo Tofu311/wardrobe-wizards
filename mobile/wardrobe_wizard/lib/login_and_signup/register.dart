@@ -63,6 +63,7 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
                   controller: userInfoControllers[2],
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Username',
@@ -73,9 +74,10 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
                   controller: userInfoControllers[3],
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    labelText: 'Password',
+                    labelText: 'Email',
                   ),
                 ),
               ),
@@ -83,9 +85,12 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
                   controller: userInfoControllers[4],
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    labelText: 'Email',
+                    labelText: 'Password',
                   ),
                 ),
               ),
@@ -97,8 +102,8 @@ class _RegisterPageState extends State<Register> {
                       'name':
                           '${userInfoControllers[0].text} ${userInfoControllers[1].text}',
                       'username': userInfoControllers[2].text,
-                      'password': userInfoControllers[3].text,
-                      'email': userInfoControllers[4].text,
+                      'email': userInfoControllers[3].text,
+                      'password': userInfoControllers[4].text,
                     };
                     debugPrint(userInfo.toString());
                     http
@@ -108,7 +113,6 @@ class _RegisterPageState extends State<Register> {
                       headers: <String, String>{
                         "Content-Type": "application/json"
                       },
-                      //Need to use jsonEncode when passing  map to server
                       body: jsonEncode(userInfo),
                     )
                         .then((response) {

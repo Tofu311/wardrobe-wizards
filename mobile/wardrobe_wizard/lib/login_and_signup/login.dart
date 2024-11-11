@@ -15,6 +15,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  bool passwordObscured = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,21 +38,39 @@ class _LoginPageState extends State<Login> {
                 textAlign: TextAlign.center,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: TextField(
-                decoration: InputDecoration(
+                controller: usernameController,
+                autocorrect: false,
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Username',
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: TextField(
+                controller: passwordController,
+                obscureText: passwordObscured,
+                enableSuggestions: false,
+                autocorrect: false,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      passwordObscured
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        passwordObscured = !passwordObscured;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -56,16 +78,14 @@ class _LoginPageState extends State<Login> {
               padding: const EdgeInsets.only(top: 25),
               child: ElevatedButton(
                 onPressed: () {
-                  //TEMPORARY: Navigate to closet page
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const Closet(title: 'My Closet');
+                  debugPrint(
+                    jsonEncode(
+                      <String, String>{
+                        "username": usernameController.text,
+                        "password": passwordController.text,
                       },
                     ),
                   );
-                  /*
                   http
                       .post(
                     Uri.parse(
@@ -73,24 +93,38 @@ class _LoginPageState extends State<Login> {
                     headers: <String, String>{
                       "Content-Type": "application/json"
                     },
-                    //Need to use jsonEncode when passing  map to server
                     body: jsonEncode(
                       <String, String>{
-                        "username": "markb",
-                        "password": "password"                        
+                        "username": usernameController.text,
+                        "password": passwordController.text,
                       },
                     ),
                   )
-                      .then((response) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Response: ${response.body}'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );                    
-                  },
+                      .then(
+                    (response) {
+                      debugPrint(response.headers.toString());
+                      debugPrint(response.body);
+                      debugPrint(response.statusCode.toString());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Response: ${response.body}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      // Do not go to closet if login unsuccessful
+                      if (response.statusCode != 200) {
+                        return;
+                      }
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const Closet(title: 'My Closet');
+                          },
+                        ),
+                      );
+                    },
                   );
-                  */
                 },
                 child: const Padding(
                   padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
