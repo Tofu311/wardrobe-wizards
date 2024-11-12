@@ -40,8 +40,14 @@ const processImage = async (
     file: Express.Multer.File,
     clothingId: mongoose.Types.ObjectId
 ): Promise<ProcessImageResult> => {
-    const localFilePath = path.join(__dirname, '..', 'uploads', `${clothingId}${path.extname(file.originalname)}`);
-    const outputFilePath = path.join(__dirname, '..', 'uploads', `no-bg-${clothingId}${path.extname(file.originalname)}`);
+    // Ensure the uploads directory exists
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const localFilePath = path.join(uploadDir, `${clothingId}${path.extname(file.originalname)}`);
+    const outputFilePath = path.join(uploadDir, `no-bg-${clothingId}${path.extname(file.originalname)}`);
 
     fs.writeFileSync(localFilePath, file.buffer);
 
