@@ -157,6 +157,8 @@ export const addClothing = async (
                 items: [clothingItem._id as mongoose.Types.ObjectId],
             });
         } else {
+            // Ensure closet.items is an array
+            closet.items = closet.items || [];
             closet.items.push(clothingItem._id as mongoose.Types.ObjectId);
             await closet.save();
         }
