@@ -107,6 +107,8 @@ const analyzeImage = async (file: Express.Multer.File): Promise<ClothingItem> =>
         response_format: zodResponseFormat(ClothingSchema, "clothes")
     });
 
+    console.log(response.choices[0].message.content);
+
     return JSON.parse(response.choices[0].message.content || '{}');
 };
 
@@ -123,7 +125,12 @@ export const addClothing = async (
         const clothingId = new mongoose.Types.ObjectId();
         
         const { imageUrl } = await processImage(req.file, clothingId);
+
+        console.log('Image URL:', imageUrl);
+
         const clothingData = await analyzeImage(req.file);
+
+        console.log('Clothing data:', clothingData);
 
         // Create a new clothing item and save it to the Clothing collection with the image URL
         const clothingItem = new Clothing({
@@ -131,6 +138,9 @@ export const addClothing = async (
             imagePath: imageUrl,
             _id: clothingId,
         });
+
+        console.log('Clothing item:', clothingItem);
+
         await clothingItem.save();
 
         // Find or create a Closet for the user
