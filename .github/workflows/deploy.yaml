@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -23,11 +25,11 @@ jobs:
 
       - name: Build backend Docker image
         run: |
-          docker build -t mbruckert/wardrobe-wizard-backend:latest -f api/Dockerfile api/
+          docker build --no-cache -t mbruckert/wardrobe-wizard-backend:latest -f api/Dockerfile .
 
       - name: Build frontend Docker image
         run: |
-          docker build -t mbruckert/wardrobe-wizard-frontend:latest -f frontend/Dockerfile frontend/
+          docker build --no-cache -t mbruckert/wardrobe-wizard-frontend:latest -f frontend/Dockerfile .
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
