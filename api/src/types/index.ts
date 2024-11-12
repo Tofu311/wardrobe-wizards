@@ -58,7 +58,19 @@ export interface ClothingItem {
     description?: string;
 }
 
+export interface ClothingDocument extends Document {
+    imagePath: string;
+    type: string;
+    primaryColor: string;
+    secondaryColor?: string;
+    otherColors?: string[];
+    material: string;
+    temperature: string;
+    description?: string;
+}
+
 export interface ClosetDocument extends Document {
     userId: Types.ObjectId;
-    items: ClothingItem[];
+    items: Types.ObjectId[];
 }
+

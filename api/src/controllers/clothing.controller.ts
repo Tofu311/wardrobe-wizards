@@ -6,39 +6,47 @@ import { OpenAI } from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import mongoose from 'mongoose';
 import { Closet } from '../models/closet.model';
+import { Clothing } from '../models/clothing.model';
 import { config } from '../config';
 import { ClothingSchema } from '../schemas/clothing.schema';
 import { AuthRequest, ClothingItem } from '../types';
+import AWS from 'aws-sdk';
 
 const openai = new OpenAI({
     apiKey: config.openAiKey,
 });
 
+const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+const s3 = new AWS.S3({
+    endpoint: config.spacesEndpoint,
+    accessKeyId: config.digitalOceanAccessKey,
+    secretAccessKey: config.digitalOceanSecretKey,
+    region: 'nyc3',
+});
+
 interface ProcessImageResult {
-    outputPath: string;
+    imageUrl: string;
 }
 
 interface MulterRequest extends AuthRequest {
     file?: Express.Multer.File;
 }
 
+interface OutfitGenerationBody extends AuthRequest {
+    prompt: string;
+}
+
 const processImage = async (
     file: Express.Multer.File,
     clothingId: mongoose.Types.ObjectId
 ): Promise<ProcessImageResult> => {
-    const localFolderPath = path.join(__dirname, '..', 'uploads');
-    if (!fs.existsSync(localFolderPath)) {
-        fs.mkdirSync(localFolderPath, { recursive: true });
-    }
-
-    const fileExtension = path.extname(file.originalname);
-    const newFileName = `${clothingId}${fileExtension}`;
-    const localFilePath = path.join(localFolderPath, newFileName);
-    const outputFilePath = path.join(localFolderPath, `no-bg-${newFileName}`);
+    const localFilePath = path.join(__dirname, '..', 'uploads', `${clothingId}${path.extname(file.originalname)}`);
+    const outputFilePath = path.join(__dirname, '..', 'uploads', `no-bg-${clothingId}${path.extname(file.originalname)}`);
 
     fs.writeFileSync(localFilePath, file.buffer);
 
     try {
+        // Remove background from the image
         const result = await removeBackgroundFromImageFile({
             path: localFilePath,
             apiKey: config.removeBgApiKey,
@@ -48,14 +56,26 @@ const processImage = async (
             crop: true,
         });
 
+        // Save processed image to a local file
         fs.writeFileSync(outputFilePath, result.base64img, { encoding: 'base64' });
-        fs.unlinkSync(localFilePath);
 
-        return { outputPath: outputFilePath };
+        // Upload to DigitalOcean Spaces
+        const data = await s3.upload({
+            Bucket: 'wardrobe-wizard', // Replace with your space name
+            Key: `uploads/no-bg-${clothingId}${path.extname(file.originalname)}`,
+            Body: fs.createReadStream(outputFilePath),
+            ACL: 'public-read',
+            ContentType: 'image/jpeg', // Adjust based on your image type
+        }).promise();
+
+        // Remove local files
+        fs.unlinkSync(localFilePath);
+        fs.unlinkSync(outputFilePath);
+
+        return { imageUrl: data.Location };
     } catch (error) {
-        if (fs.existsSync(localFilePath)) {
-            fs.unlinkSync(localFilePath);
-        }
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+        if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
         throw error;
     }
 };
@@ -102,22 +122,26 @@ export const addClothing = async (
 
         const clothingId = new mongoose.Types.ObjectId();
         
-        const { outputPath } = await processImage(req.file, clothingId);
+        const { imageUrl } = await processImage(req.file, clothingId);
         const clothingData = await analyzeImage(req.file);
-        
-        const closet = await Closet.findOne({ userId: req.user.id });
-        const clothingItem = {
-            ...clothingData,
-            imagePath: outputPath,
-        };
 
+        // Create a new clothing item and save it to the Clothing collection with the image URL
+        const clothingItem = new Clothing({
+            ...clothingData,
+            imagePath: imageUrl,
+            _id: clothingId,
+        });
+        await clothingItem.save();
+
+        // Find or create a Closet for the user
+        const closet = await Closet.findOne({ userId: req.user.id });
         if (!closet) {
             await Closet.create({
                 userId: req.user.id,
-                items: [clothingItem],
+                items: [clothingItem._id as mongoose.Types.ObjectId],
             });
         } else {
-            closet.items.push(clothingItem);
+            closet.items.push(clothingItem._id as mongoose.Types.ObjectId);
             await closet.save();
         }
 
