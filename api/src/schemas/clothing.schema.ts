@@ -13,4 +13,10 @@ export const ClothingSchema = z.object({
     description: z.string(),
 });
 
+export const OutfitSchema = z.object({
+    outfitItemIds: z.array(z.string())
+});
+
 export type ClothingSchemaType = z.infer<typeof ClothingSchema>;
+
+export type OutfitSchemaType = z.infer<typeof OutfitSchema>;
