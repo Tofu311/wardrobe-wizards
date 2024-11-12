@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Register extends StatefulWidget {
   const Register({super.key, required this.title});
@@ -9,63 +12,53 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<Register> {
+  List<TextEditingController> userInfoControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(        
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,        
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Padding(
-              padding: EdgeInsets.only(bottom: 50),
-              child: Text(
-                'Ready to become a wardrobe wizard?\nSign up now!',
-                style: TextStyle(fontSize: 36),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Email',
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 50, 0, 50),
+                child: Text(
+                  'Ready to become a wardrobe wizard?\nSign up now!',
+                  style: TextStyle(fontSize: 36),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Password',
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[0],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'First Name',
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 25),
-              child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('API call not yet implemented'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
-                  child: Text('Sign Up'),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[1],
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Last Name',
+                  ),
                 ),
               ),
-<<<<<<< Updated upstream
-            ),
-          ],
-=======
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
@@ -122,17 +115,14 @@ class _RegisterPageState extends State<Register> {
                       },
                       body: jsonEncode(userInfo),
                     )
-                        .then(
-                      (response) {
-                        debugPrint(response.headers.toString());
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Response: ${response.body}'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
-                    );
+                        .then((response) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Response: ${response.body}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    });
                   },
                   child: const Padding(
                     padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
@@ -142,7 +132,6 @@ class _RegisterPageState extends State<Register> {
               ),
             ],
           ),
->>>>>>> Stashed changes
         ),
       ),
     );

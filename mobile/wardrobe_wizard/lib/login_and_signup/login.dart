@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:wardrobe_wizard/closet.dart';
 import 'package:wardrobe_wizard/login_and_signup/pwdreset.dart';
 import 'package:wardrobe_wizard/login_and_signup/register.dart';
 
@@ -11,6 +15,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  bool passwordObscured = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,21 +38,39 @@ class _LoginPageState extends State<Login> {
                 textAlign: TextAlign.center,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: TextField(
-                decoration: InputDecoration(
+                controller: usernameController,
+                autocorrect: false,
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Email',
+                  labelText: 'Username',
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: TextField(
+                controller: passwordController,
+                obscureText: passwordObscured,
+                enableSuggestions: false,
+                autocorrect: false,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      passwordObscured
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        passwordObscured = !passwordObscured;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -52,11 +78,52 @@ class _LoginPageState extends State<Login> {
               padding: const EdgeInsets.only(top: 25),
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('API call not yet implemented'),
-                      backgroundColor: Colors.red,
+                  debugPrint(
+                    jsonEncode(
+                      <String, String>{
+                        "username": usernameController.text,
+                        "password": passwordController.text,
+                      },
                     ),
+                  );
+                  http
+                      .post(
+                    Uri.parse(
+                        'https://api.wardrobewizard.fashion/api/users/login'),
+                    headers: <String, String>{
+                      "Content-Type": "application/json"
+                    },
+                    body: jsonEncode(
+                      <String, String>{
+                        "username": usernameController.text,
+                        "password": passwordController.text,
+                      },
+                    ),
+                  )
+                      .then(
+                    (response) {
+                      debugPrint(response.headers.toString());
+                      debugPrint(response.body);
+                      debugPrint(response.statusCode.toString());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Response: ${response.body}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      // Do not go to closet if login unsuccessful
+                      if (response.statusCode != 200) {
+                        return;
+                      }
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const Closet(title: 'My Closet');
+                          },
+                        ),
+                      );
+                    },
                   );
                 },
                 child: const Padding(
