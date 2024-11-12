@@ -3,6 +3,7 @@
 // import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
+import UserCloset from "../pages/UserCloset";
 import { Button } from "./components/ui/button";
 function App() {
   //const [count, setCount] = useState(0);
@@ -12,21 +13,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
-        <Route
-          path="/closet"
-          element={
-            <div>
-              <h2 className="text-3xl">Closet</h2>
-              <Button
-                onClick={() => {
-                  window.location.href = "/";
-                }}
-              >
-                Sign Out
-              </Button>
-            </div>
-          }
-        />
+        <Route path="/closet" element={<UserCloset />} />
       </Routes>
     </Router>
   );
