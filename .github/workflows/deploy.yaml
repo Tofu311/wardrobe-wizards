@@ -23,11 +23,11 @@ jobs:
 
       - name: Build backend Docker image
         run: |
-          docker build -t mbruckert/wardrobe-wizard-backend:latest -f api/Dockerfile .
+          docker build -t mbruckert/wardrobe-wizard-backend:latest -f api/Dockerfile api/
 
       - name: Build frontend Docker image
         run: |
-          docker build -t mbruckert/wardrobe-wizard-frontend:latest -f frontend/Dockerfile .
+          docker build -t mbruckert/wardrobe-wizard-frontend:latest -f frontend/Dockerfile frontend/
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
