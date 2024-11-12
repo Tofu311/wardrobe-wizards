@@ -62,8 +62,87 @@ class _RegisterPageState extends State<Register> {
                   child: Text('Sign Up'),
                 ),
               ),
+<<<<<<< Updated upstream
             ),
           ],
+=======
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[2],
+                  autocorrect: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Username',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[3],
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Email',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: userInfoControllers[4],
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Password',
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 25),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Map<String, String> userInfo = {
+                      'name':
+                          '${userInfoControllers[0].text} ${userInfoControllers[1].text}',
+                      'username': userInfoControllers[2].text,
+                      'email': userInfoControllers[3].text,
+                      'password': userInfoControllers[4].text,
+                    };
+                    debugPrint(userInfo.toString());
+                    http
+                        .post(
+                      Uri.parse(
+                          'https://api.wardrobewizard.fashion/api/users/register'),
+                      headers: <String, String>{
+                        "Content-Type": "application/json"
+                      },
+                      body: jsonEncode(userInfo),
+                    )
+                        .then(
+                      (response) {
+                        debugPrint(response.headers.toString());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Response: ${response.body}'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(50, 0, 50, 0),
+                    child: Text('Sign Up'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+>>>>>>> Stashed changes
         ),
       ),
     );
