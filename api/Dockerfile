@@ -4,8 +4,10 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package.json and package-lock.json to install dependencies
 COPY api/package*.json ./
+
+# Install dependencies
 RUN npm install
 
 # Copy the rest of the app
@@ -18,4 +20,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the app with environment variables
-CMD ["sh", "-c", "OPENAI_API_KEY=$OPENAI_API_KEY REMOVE_BG_API_KEY=$REMOVE_BG_API_KEY DATABASE_URL=$DATABASE_URL JWT_SECRET=$JWT_SECRET npm start"]
+CMD ["sh", "-c", "OPENAI_API_KEY=$OPENAI_API_KEY REMOVE_BG_API_KEY=$REMOVE_BG_API_KEY DATABASE_URL=$DATABASE_URL JWT_SECRET=$JWT_SECRET WEATHER_API_KEY=$WEATHER_API_KEY SPACES_ENDPOINT=$SPACES_ENDPOINT DIGITAL_OCEAN_ACCESS_KEY=$DIGITAL_OCEAN_ACCESS_KEY DIGITAL_OCEAN_SECRET_KEY=$DIGITAL_OCEAN_SECRET_KEY npm start"]

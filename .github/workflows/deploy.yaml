@@ -52,12 +52,20 @@ jobs:
           export REMOVE_BG_API_KEY="${{ secrets.REMOVE_BG_API_KEY }}"
           export DATABASE_URL="${{ secrets.DATABASE_URL }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export WEATHER_API_KEY="${{ secrets.WEATHER_API_KEY }}"
+          export SPACES_ENDPOINT="${{ secrets.SPACES_ENDPOINT }}"
+          export DIGITAL_OCEAN_ACCESS_KEY="${{ secrets.DIGITAL_OCEAN_ACCESS_KEY }}"
+          export DIGITAL_OCEAN_SECRET_KEY="${{ secrets.DIGITAL_OCEAN_SECRET_KEY }}"
 
           # Verify variables are set
-          echo "OPENAI_API_KEY is $OPENAI_API_KEY"
-          echo "REMOVE_BG_API_KEY is $REMOVE_BG_API_KEY"
-          echo "DATABASE_URL is $DATABASE_URL"
-          echo "JWT_SECRET is $JWT_SECRET"
+          echo "OPENAI_API_KEY is set"
+          echo "REMOVE_BG_API_KEY is set"
+          echo "DATABASE_URL is set"
+          echo "JWT_SECRET is set"
+          echo "WEATHER_API_KEY is set"
+          echo "SPACES_ENDPOINT is set"
+          echo "DIGITAL_OCEAN_ACCESS_KEY is set"
+          echo "DIGITAL_OCEAN_SECRET_KEY is set"
 
           # SSH into the server and execute commands
           sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER@$HOST" << EOF
@@ -75,6 +83,10 @@ jobs:
               -e REMOVE_BG_API_KEY="$REMOVE_BG_API_KEY" \
               -e DATABASE_URL="$DATABASE_URL" \
               -e JWT_SECRET="$JWT_SECRET" \
+              -e WEATHER_API_KEY="$WEATHER_API_KEY" \
+              -e SPACES_ENDPOINT="$SPACES_ENDPOINT" \
+              -e DIGITAL_OCEAN_ACCESS_KEY="$DIGITAL_OCEAN_ACCESS_KEY" \
+              -e DIGITAL_OCEAN_SECRET_KEY="$DIGITAL_OCEAN_SECRET_KEY" \
               mbruckert/wardrobe-wizard-backend:latest
 
             # Run the frontend container
