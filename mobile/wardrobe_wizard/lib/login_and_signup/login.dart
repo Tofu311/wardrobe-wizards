@@ -105,14 +105,14 @@ class _LoginPageState extends State<Login> {
                       debugPrint(response.headers.toString());
                       debugPrint(response.body);
                       debugPrint(response.statusCode.toString());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Response: ${response.body}'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
                       // Do not go to closet if login unsuccessful
                       if (response.statusCode != 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Response: ${response.body}'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
                         return;
                       }
                       Navigator.pushReplacement(

@@ -106,58 +106,56 @@ class _ClosetState extends State<Closet> {
                 ),
                 itemCount: testCloset.length,
                 itemBuilder: (BuildContext context, int index) {
-                  return Card(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text(testCloset[index].name),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Image(
-                                            image: testCloset[index].image,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        Text('Size: ${testCloset[index].size}'),
-                                        Text(
-                                            'Color: ${testCloset[index].color}'),
-                                        Text(
-                                            'Style: ${testCloset[index].style}'),
-                                        Text('Type: ${testCloset[index].type}'),
-                                      ],
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  );
+                  return GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text(testCloset[index].name),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Image(
+                                    image: testCloset[index].image,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Text('Size: ${testCloset[index].size}'),
+                                Text('Color: ${testCloset[index].color}'),
+                                Text('Style: ${testCloset[index].style}'),
+                                Text('Type: ${testCloset[index].type}'),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
                                 },
-                              );
-                            },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Expanded(
                             child: Image(
                               image: testCloset[index].image,
                               fit: BoxFit.cover,
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(testCloset[index].name),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(testCloset[index].name),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
