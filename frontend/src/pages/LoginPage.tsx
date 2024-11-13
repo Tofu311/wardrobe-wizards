@@ -12,11 +12,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import styles from "./stylesheets/LoginPage.module.css";
 import { useNavigate } from "react-router-dom";
 
-// const API_ROOT = "http://localhost:3000/api"; // local
-const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+const API_ROOT = "http://localhost:3000/api"; // local
+// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -153,34 +152,25 @@ function LoginPage() {
   }, [isLogin, form]);
 
   return (
-    <div className={styles.backgroundContainer}>
-      <div className={styles.outerContainer}>
+    <div className="min-h-screen w-full bg-[#1a237e] bg-[url('/assets/images/star-background.jpeg')] bg-cover bg-center flex items-center justify-center p-4 overflow-x-hidden">
+      <div className="w-full max-w-4xl h-[500px] flex">
         {/* Sign Up Form */}
-        {!isLogin && (
-          <div
-            className={`absolute w-full transition-transform duration-500 ${
-              isLogin ? "translate-x-full" : "translate-x-0"
-            }`}
-          >
-            <div className={`${styles.formContainer} ${styles.roundedLeft}`}>
-              <h2 className="text-xl font-bold mb-6">Sign Up</h2>
+        {!isLogin ? (
+          <>
+            <div className="w-[50%] bg-[#73628A] p-6 rounded-l-lg">
+              <h2 className="text-2xl font-bold text-white mb-3">Sign Up</h2>
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)}>
                   <FormField
                     control={form.control}
                     name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          First Name
-                        </FormLabel>
+                        <FormLabel className="text-white">First Name</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             placeholder="Enter your First Name"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -188,19 +178,16 @@ function LoginPage() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="last_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Last Name
-                        </FormLabel>
+                        <FormLabel className="text-white">Last Name</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             placeholder="Enter your Last Name"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -213,13 +200,11 @@ function LoginPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Username
-                        </FormLabel>
+                        <FormLabel className="text-white">Username</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             placeholder="Enter your username"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -232,14 +217,12 @@ function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Password
-                        </FormLabel>
+                        <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             type="password"
                             placeholder="Enter your password"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -252,12 +235,12 @@ function LoginPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>Email</FormLabel>
+                        <FormLabel className="text-white">Email</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             type="email"
                             placeholder="Enter your email"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -265,82 +248,66 @@ function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Sign Up</Button>
+                  <Button type="submit" className="w-[25%]">
+                    Sign Up
+                  </Button>
                 </form>
               </Form>
-
               {error && (
-                <div className="errorMessage mt-4 text-center">{error}</div>
+                <div className="mt-4 text-red-500 text-center">{error}</div>
               )}
-
-              <p className="mt-4 text-center">
+              <p className="mt-4 text-center text-white">
                 Already have an account?{" "}
-                <span
+                <button
                   onClick={() => {
-                    toggleForm();
-                    setError(""); // Clear the error message
+                    setIsLogin(true);
+                    setError("");
                   }}
-                  className="text-blue-500 cursor-pointer hover:underline ml-1"
+                  className="text-blue-300 hover:underline"
                 >
                   Sign In
-                </span>
+                </button>
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Hide Login */}
-        {!isLogin && (
-          <div className={`${styles.welcomeContainer}  ${styles.roundedRight}`}>
-            <h1 className="text-4xl font-bold mb-6">Welcome to</h1>
-            <img
-              src="/assets/images/Vector.png"
-              alt="App Logo"
-              className={`${styles.loginLogo}`}
-            />
-            <h1>Wardrobe Wizard</h1>
-          </div>
-        )}
-
-        {/* Hide SignUp */}
-        {isLogin && (
-          <div className={`${styles.welcomeContainer} ${styles.roundedLeft}`}>
-            <h1 className="text-4xl font-bold mb-6">Welcome to </h1>
-            <img
-              src="/assets/images/Vector.png"
-              alt="App Logo"
-              className={`${styles.loginLogo}`}
-            />
-            <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1>
-          </div>
-        )}
-
-        {/* Login Form */}
-        {isLogin && (
-          <div
-            className={`absolute w-full transition-transform duration-500 ${
-              isLogin ? "translate-x-0" : "translate-x-full"
-            }`}
-          >
-            <div className={`${styles.formContainer} ${styles.roundedRight}`}>
-              <h2 className="text-xl font-bold mb-6">Login</h2>
+            <div className="w-[50%] bg-[#CBC5EA] p-6 rounded-r-lg flex flex-col items-center justify-center space-y-4">
+              <h1 className="text-4xl font-bold text-black">Welcome to</h1>
+              <img
+                src="/assets/images/Vector.png"
+                alt="App Logo"
+                className="w-[70%] h-auto"
+              />
+              <h1 className="text-4xl font-bold text-black">Wardrobe Wizard</h1>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Login Form */}
+            <div className="w-[50%] bg-[#CBC5EA] p-6 rounded-l-lg flex flex-col items-center justify-center space-y-4">
+              <h1 className="text-4xl font-bold text-black">Welcome to</h1>
+              <img
+                src="/assets/images/Vector.png"
+                alt="App Logo"
+                className="w-[70%] h-auto"
+              />
+              <h1 className="text-4xl font-bold text-black">Wardrobe Wizard</h1>
+            </div>
+            <div className="w-[50%] bg-[#73628A] p-6 rounded-r-lg">
+              <h2 className="text-2xl font-bold text-white mb-6">Login</h2>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
+                  className="space-y-3"
                 >
                   <FormField
                     control={form.control}
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Username
-                        </FormLabel>
+                        <FormLabel className="text-white">Username</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             placeholder="Enter your username"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -353,14 +320,12 @@ function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className={styles.labels}>
-                          Password
-                        </FormLabel>
+                        <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
                           <Input
-                            className={styles.inputField}
                             type="password"
                             placeholder="Enter your password"
+                            className="bg-white text-black placeholder:text-gray-500"
                             {...field}
                           />
                         </FormControl>
@@ -368,28 +333,28 @@ function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Sign In</Button>
+                  <Button type="submit" className="w-full">
+                    Sign In
+                  </Button>
                 </form>
               </Form>
-
               {error && (
-                <div className="errorMessage mt-4 text-center">{error}</div>
+                <div className="mt-4 text-red-500 text-center">{error}</div>
               )}
-
-              <p className="mt-4 text-center">
+              <p className="mt-4 text-center text-white">
                 Don't have an account?{" "}
-                <span
+                <button
                   onClick={() => {
-                    toggleForm();
-                    setError(""); // Clear the error message
+                    setIsLogin(false);
+                    setError("");
                   }}
-                  className="text-blue-500 cursor-pointer hover:underline ml-1"
+                  className="text-blue-300 hover:underline"
                 >
                   Sign Up
-                </span>
+                </button>
               </p>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

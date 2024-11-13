@@ -177,6 +177,35 @@ export const addClothing = async (
     }
 };
 
+export const getClothing = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        if(!req.user?.id) {
+            res.status(401).json({ message: 'User not authenticated' });
+            return;
+        }
+
+        const clothingType = req.query.type as String | undefined;
+        const closet = await Closet.findOne({ userId: req.user?.id })
+
+        if (!closet) {
+            res.status(404).json({ message: 'Closet not found'});
+            return;
+        }
+
+        // Filter items by ClothingType if specified
+        const items = clothingType
+            ? closet.items.filter(item => item.type === clothingType.toUpperCase())
+            : closet.items;
+
+        res.status(200).json(items);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 export const generateOutfit = async (
     req: OutfitGenerationBody,

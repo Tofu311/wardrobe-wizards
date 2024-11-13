@@ -6,6 +6,7 @@ import { addClothing, generateOutfit, getClosetItems, deleteClothingItem, saveOu
 const router = Router();
 
 router.post('/', verifyToken, upload.single('image'), addClothing);
+router.get('/', verifyToken, getClothing);
 
 router.get('/', verifyToken, getClosetItems);
 
