@@ -11,6 +11,7 @@ import { config } from '../config';
 import { ClothingSchema, OutfitSchema } from '../schemas/clothing.schema';
 import { AuthRequest, ClothingItem } from '../types';
 import AWS from 'aws-sdk';
+import { Outfit } from '../models/outfit.model';
 
 const openai = new OpenAI({
     apiKey: config.openAiKey,
@@ -227,7 +228,7 @@ export const generateOutfit = async (
             response_format: zodResponseFormat(OutfitSchema, "outfit")
         });
 
-        res.status(200).json(response.choices[0].message.content);
+        res.status(200).json(JSON.parse(response.choices[0].message.content as string));
     } catch (error) {
         console.error('Error generating outfit:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -273,6 +274,96 @@ export const getClosetItems = async (
         res.status(200).json(clothingItems);
     } catch (error) {
         console.error('Error fetching closet items:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const deleteClothingItem = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.params.id) {
+        res.status(400).json({ message: 'Clothing item ID is required' });
+        return;
+    }
+
+    try {
+        const closet = await Closet.findOne({ userId: req.user?.id });
+
+        if (!closet) {
+            res.status(400).json({ message: 'No clothing items found' });
+            return;
+        }
+
+        // Convert req.params.id to ObjectId
+        const itemId = new mongoose.Types.ObjectId(req.params.id);
+
+        const index = closet.items.findIndex(item => item.equals(itemId));
+
+        if (index === -1) {
+            res.status(404).json({ message: 'Clothing item not found in closet' });
+            return;
+        }
+
+        // Remove the item from the closet
+        closet.items.splice(index, 1);
+
+        await closet.save();
+
+        //also remove the item from the Clothing collection
+        await Clothing.findByIdAndDelete(itemId);
+
+        res.status(200).json({ message: 'Clothing deleted' });
+    } catch (error) {
+        console.error('Error deleting clothing item:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// Delete the outfit
+
+export const deleteOutfit = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.params.id) {
+        res.status(400).json({ message: 'Outfit ID is required' });
+        return;
+    }
+
+    try {
+        const outfit = await Outfit.findOneAndDelete({ userId: req.user?.id, _id: req.params.id });
+
+        if (!outfit) {
+            res.status(404).json({ message: 'Outfit not found' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Outfit deleted' });
+    } catch (error) {
+        console.error('Error deleting outfit:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const saveOutfit = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.body.items) {
+        res.status(400).json({ message: 'Items array is required' });
+        return;
+    }
+
+    try {
+        const outfit = await Outfit.create({
+            userId: req.user?.id,
+            items: req.body.items,
+        });
+
+        res.status(201).json(outfit);
+    } catch (error) {
+        console.error('Error saving outfit:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

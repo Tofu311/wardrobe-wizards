@@ -74,3 +74,12 @@ export interface ClosetDocument extends Document {
     items: Types.ObjectId[];
 }
 
+export interface OutfitItem {
+    userId: Types.ObjectId;
+    items: Types.ObjectId[];
+}
+
+export interface OutfitDocument extends Document {
+    userId: Types.ObjectId;
+    items: Types.ObjectId[];
+}
