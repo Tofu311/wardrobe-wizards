@@ -19,6 +19,7 @@ class _RegisterPageState extends State<Register> {
     TextEditingController(),
     TextEditingController(),
   ];
+  //TODO: Email & Password format validation
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,23 +109,14 @@ class _RegisterPageState extends State<Register> {
                       'email': userInfoControllers[3].text,
                     };
                     debugPrint(userInfo.toString());
-                    http
-                        .post(
+                    http.post(
                       Uri.parse(
                           'https://api.wardrobewizard.fashion/api/users/register'),
                       headers: <String, String>{
                         "Content-Type": "application/json"
                       },
                       body: jsonEncode(userInfo),
-                    )
-                        .then((response) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Response: ${response.body}'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    });
+                    );
                   },
                   child: const Padding(
                     padding: EdgeInsets.fromLTRB(50, 0, 50, 0),

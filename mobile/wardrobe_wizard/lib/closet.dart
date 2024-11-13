@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:wardrobe_wizard/clothing.dart';
 import 'package:wardrobe_wizard/login_and_signup/login.dart';
 
@@ -46,7 +47,17 @@ class _ClosetState extends State<Closet> {
       image: const AssetImage('assets/hoodie.png'),
     ),
   ];
+  final ImagePicker _picker = ImagePicker();
+  XFile? _image;
 
+  Future<void> takePicture() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      _image = image;
+    });
+  }
+
+  //TODO: Implement sorting by type and adding clothes
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,25 +176,7 @@ class _ClosetState extends State<Closet> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Error'),
-                content: const Text('Add clothing not yet implemented'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Close'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
+        onPressed: takePicture,
         child: const Icon(Icons.add),
       ),
     );
