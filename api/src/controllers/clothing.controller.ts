@@ -367,3 +367,17 @@ export const saveOutfit = async (
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+export const getOutfits = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        const outfits = await Outfit.find({ userId: req.user?.id });
+
+        res.status(200).json(outfits);
+    } catch (error) {
+        console.error('Error fetching outfits:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
