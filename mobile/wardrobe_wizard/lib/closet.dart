@@ -164,6 +164,28 @@ class _ClosetState extends State<Closet> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Error'),
+                content: const Text('Add clothing not yet implemented'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Close'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

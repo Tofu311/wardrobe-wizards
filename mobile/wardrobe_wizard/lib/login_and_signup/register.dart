@@ -98,12 +98,14 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.only(top: 25),
                 child: ElevatedButton(
                   onPressed: () {
-                    Map<String, String> userInfo = {
-                      'name':
-                          '${userInfoControllers[0].text} ${userInfoControllers[1].text}',
+                    Map<String, dynamic> userInfo = {
+                      'name': {
+                        'first': userInfoControllers[0].text,
+                        'last': userInfoControllers[1].text,
+                      },
                       'username': userInfoControllers[2].text,
-                      'email': userInfoControllers[3].text,
                       'password': userInfoControllers[4].text,
+                      'email': userInfoControllers[3].text,
                     };
                     debugPrint(userInfo.toString());
                     http
