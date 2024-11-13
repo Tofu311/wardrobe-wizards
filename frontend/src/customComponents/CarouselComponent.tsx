@@ -1,4 +1,4 @@
-// CarouselComponent.jsx
+// CarouselComponent.tsx
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,9 +10,19 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
-export default function CarouselComponent({ items, selectedItemId, title }) {
+// Define prop types
+interface CarouselComponentProps {
+  items: { id: string; image_url: string }[];
+  selectedItemId?: string;
+  title?: string;
+}
+
+export default function CarouselComponent({
+  items,
+  selectedItemId,
+}: CarouselComponentProps) {
   const [api, setApi] = React.useState<CarouselApi | null>(null);
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
 
   // Initialize the carousel and set up the selected index listener
   React.useEffect(() => {
@@ -56,7 +66,7 @@ export default function CarouselComponent({ items, selectedItemId, title }) {
       >
         <CarouselContent>
           {items.map((item, index) => (
-            <CarouselItem key={index} className="basis-1/5">
+            <CarouselItem key={item.id} className="basis-1/5">
               <Card
                 className={`${selectedIndex === index ? "bg-[#FFF9DF]" : ""}`}
               >

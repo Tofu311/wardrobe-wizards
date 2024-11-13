@@ -142,10 +142,10 @@ function LoginPage() {
     }
   }
 
-  const toggleForm = () => {
-    setIsLogin((prev) => !prev);
-    form.reset(isLogin ? signUpDefaults : loginDefaults);
-  };
+  // const toggleForm = () => {
+  //   setIsLogin((prev) => !prev);
+  //   form.reset(isLogin ? signUpDefaults : loginDefaults);
+  // };
 
   useEffect(() => {
     form.reset(isLogin ? loginDefaults : signUpDefaults);

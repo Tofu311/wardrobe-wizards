@@ -1,6 +1,27 @@
-// WheelCarousel.jsx
-import * as React from "react";
+// WheelCarousel.tsx
 import CarouselComponent from "./CarouselComponent";
+
+// Define item structure
+interface Item {
+  id: string;
+  image_url: string;
+}
+
+// Define props structure
+interface WheelCarouselProps {
+  headwear: Item[];
+  top: Item[];
+  outerwear: Item[];
+  bottom: Item[];
+  footwear: Item[];
+  selectedItems?: {
+    headwear?: string;
+    top?: string;
+    outerwear?: string;
+    bottom?: string;
+    footwear?: string;
+  };
+}
 
 export default function WheelCarousel({
   headwear,
@@ -8,15 +29,15 @@ export default function WheelCarousel({
   outerwear,
   bottom,
   footwear,
-  selectedItems,
-}) {
-  // Ensure selectedItems is an object with clothing types as keys
+  selectedItems = {}, // Default to an empty object if not provided
+}: WheelCarouselProps) {
+  // Default selected items structure
   const defaultSelectedItems = {
-    headwear: null,
-    top: null,
-    outerwear: null,
-    bottom: null,
-    footwear: null,
+    headwear: undefined,
+    top: undefined,
+    outerwear: undefined,
+    bottom: undefined,
+    footwear: undefined,
   };
 
   // Merge defaultSelectedItems with the provided selectedItems
@@ -24,31 +45,14 @@ export default function WheelCarousel({
 
   return (
     <div>
-      <CarouselComponent
-        items={headwear}
-        selectedItemId={selected.headwear}
-        title="Headwear"
-      />
-      <CarouselComponent
-        items={top}
-        selectedItemId={selected.top}
-        title="Top"
-      />
+      <CarouselComponent items={headwear} selectedItemId={selected.headwear} />
+      <CarouselComponent items={top} selectedItemId={selected.top} />
       <CarouselComponent
         items={outerwear}
         selectedItemId={selected.outerwear}
-        title="Outerwear"
       />
-      <CarouselComponent
-        items={bottom}
-        selectedItemId={selected.bottom}
-        title="Bottom"
-      />
-      <CarouselComponent
-        items={footwear}
-        selectedItemId={selected.footwear}
-        title="Footwear"
-      />
+      <CarouselComponent items={bottom} selectedItemId={selected.bottom} />
+      <CarouselComponent items={footwear} selectedItemId={selected.footwear} />
     </div>
   );
 }
