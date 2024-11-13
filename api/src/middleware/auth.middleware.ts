@@ -8,6 +8,7 @@ interface JwtPayload {
     username: string;
 }
 
+// verify the token 
 export const verifyToken = (
     req: AuthRequest,
     res: Response,

@@ -1,9 +1,9 @@
 import mongoose, { Model, Schema } from 'mongoose';
-import { ClosetDocument, ClothingItem } from '../types';
+import { OutfitDocument } from '../types';
 
-const closetSchema = new Schema<ClosetDocument>({
+const outfitSchema = new Schema<OutfitDocument>({
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     items: [{ type: Schema.Types.ObjectId, ref: "Clothing" }],
 });
 
-export const Closet = mongoose.model<ClosetDocument>('Closet', closetSchema);
+export const Outfit = mongoose.model<OutfitDocument>('Outfit', outfitSchema);

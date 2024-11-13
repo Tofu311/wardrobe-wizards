@@ -67,11 +67,14 @@ export const register = async (
         // const { name, username, email, password, geolocation } = req.body;
         const { name, username, email, password, geolocation } = req.body;
 
+        console.log(name, username, email, password, geolocation);
 
         const existingUser = await User.findOne({ 
             $or: [{ username }, { email }] 
         });
         
+        console.log(existingUser);
+
         if (existingUser) {
             res.status(409).json({ message: "Username or email already exists" });
             return;
@@ -129,7 +132,12 @@ export const login = async (
         // const { username, password, geolocation } = req.body;
         const { username, password } = req.body;
 
+        console.log(username, password);
+
         const user = await User.findOne({ username });
+
+        console.log(user);
+        
         if (!user || !(await user.matchPassword(password))) {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
@@ -141,6 +149,7 @@ export const login = async (
             { expiresIn: '1h' }
         );
 
+        console.log(token);
         
         // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
 
