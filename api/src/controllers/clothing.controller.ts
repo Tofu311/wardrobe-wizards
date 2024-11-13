@@ -182,30 +182,35 @@ export const getClothing = async (
     res: Response
 ): Promise<void> => {
     try {
-        if(!req.user?.id) {
+        if (!req.user?.id) {
             res.status(401).json({ message: 'User not authenticated' });
             return;
         }
 
-        const clothingType = req.query.type as String | undefined;
-        const closet = await Closet.findOne({ userId: req.user?.id })
+        const clothingType = req.query.type as string | undefined;
+        const color = req.query.color as string | undefined; // Retrieve color from query
+
+        const closet = await Closet.findOne({ userId: req.user?.id }).populate<{ items: ClothingItem[] }>('items');
 
         if (!closet) {
-            res.status(404).json({ message: 'Closet not found'});
+            res.status(404).json({ message: 'Closet not found' });
             return;
         }
 
-        // Filter items by ClothingType if specified
-        const items = clothingType
-            ? closet.items.filter(item => item.type === clothingType.toUpperCase())
-            : closet.items;
+        // Filter items by ClothingType and color if specified
+        const items = closet.items.filter((item) => {
+            const matchesType = clothingType ? item.type === clothingType.toUpperCase() : true;
+            const matchesColor = color ? item.primaryColor.toLowerCase() === color.toLowerCase() : true;
+            return matchesType && matchesColor;
+        });
 
         res.status(200).json(items);
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
+
 
 export const generateOutfit = async (
     req: OutfitGenerationBody,
