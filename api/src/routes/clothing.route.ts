@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { upload } from '../middleware/upload.middleware';
 import { verifyToken } from '../middleware/auth.middleware';
-import { addClothing, generateOutfit, getClosetItems, deleteClothingItem, saveOutfit, deleteOutfit } from '../controllers/clothing.controller';
+import { addClothing, generateOutfit, getClosetItems, deleteClothingItem, saveOutfit, deleteOutfit, getOutfits } from '../controllers/clothing.controller';
 
 const router = Router();
 
 router.post('/', verifyToken, upload.single('image'), addClothing);
 
 router.get('/', verifyToken, getClosetItems);
+
+router.get('/outfit', verifyToken, getOutfits);
 
 router.delete('/:id', verifyToken, deleteClothingItem);
 
