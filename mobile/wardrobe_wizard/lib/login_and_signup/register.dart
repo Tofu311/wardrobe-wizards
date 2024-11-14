@@ -12,6 +12,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<Register> {
+  bool passwordObscured = true;
   List<TextEditingController> userInfoControllers = [
     TextEditingController(),
     TextEditingController(),
@@ -19,7 +20,7 @@ class _RegisterPageState extends State<Register> {
     TextEditingController(),
     TextEditingController(),
   ];
-  //TODO: Email & Password format validation
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,12 +87,24 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
                   controller: userInfoControllers[4],
-                  obscureText: true,
+                  obscureText: passwordObscured,
                   enableSuggestions: false,
                   autocorrect: false,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
                     labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        passwordObscured
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          passwordObscured = !passwordObscured;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -99,6 +112,42 @@ class _RegisterPageState extends State<Register> {
                 padding: const EdgeInsets.only(top: 25),
                 child: ElevatedButton(
                   onPressed: () {
+                    // Ensure all data is valid before making api call
+                    for (var controller in userInfoControllers) {
+                      if (controller.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill out all fields'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                    }
+                    if (RegExp(r'^[^@]+@[^@]+\.[^@]+$')
+                            .hasMatch(userInfoControllers[3].text) ==
+                        false) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter a valid email address'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (RegExp(r'^(?=.*[A-Z])(?=.*\d).{8,}$')
+                            .hasMatch(userInfoControllers[4].text) ==
+                        false) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Password must be at least 8 characters long and '
+                              'contain at least one uppercase letter and one digit.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
                     Map<String, dynamic> userInfo = {
                       'name': {
                         'first': userInfoControllers[0].text,
@@ -109,13 +158,26 @@ class _RegisterPageState extends State<Register> {
                       'email': userInfoControllers[3].text,
                     };
                     debugPrint(userInfo.toString());
-                    http.post(
+                    http
+                        .post(
                       Uri.parse(
                           'https://api.wardrobewizard.fashion/api/users/register'),
                       headers: <String, String>{
                         "Content-Type": "application/json"
                       },
                       body: jsonEncode(userInfo),
+                    )
+                        .then(
+                      (response) {
+                        debugPrint(response.headers.toString());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User created successfully!"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      },
                     );
                   },
                   child: const Padding(
