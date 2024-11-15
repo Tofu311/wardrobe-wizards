@@ -2,10 +2,11 @@
 // import viteLogo from "/vite.svg";
 // import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import UserCloset from "./pages/UserCloset";
+import LoginPage from "../pages/LoginPage";
+import UserCloset from "../pages/UserCloset";
 import Outfits from "./pages/Outfits";
 
+import { Button } from "./components/ui/button";
 function App() {
   //const [count, setCount] = useState(0);
 

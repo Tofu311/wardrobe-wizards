@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { removeBackgroundFromImageFile } from 'remove.bg';
 import path from 'path';
 import fs from 'fs';
@@ -6,60 +6,39 @@ import { OpenAI } from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import mongoose from 'mongoose';
 import { Closet } from '../models/closet.model';
-import { Clothing } from '../models/clothing.model';
 import { config } from '../config';
-import { ClothingSchema, OutfitSchema } from '../schemas/clothing.schema';
+import { ClothingSchema } from '../schemas/clothing.schema';
 import { AuthRequest, ClothingItem } from '../types';
-import AWS from 'aws-sdk';
-import { Outfit } from '../models/outfit.model';
 
 const openai = new OpenAI({
     apiKey: config.openAiKey,
 });
 
-const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
-const s3 = new AWS.S3({
-    endpoint: config.spacesEndpoint,
-    accessKeyId: config.digitalOceanAccessKey,
-    secretAccessKey: config.digitalOceanSecretKey,
-    region: 'nyc3',
-});
-
 interface ProcessImageResult {
-    imageUrl: string;
+    outputPath: string;
 }
 
 interface MulterRequest extends AuthRequest {
     file?: Express.Multer.File;
 }
 
-interface OutfitGenerationBody extends Request {
-    user?: {
-        id: string;
-        username: string;
-    };
-    body: {
-        prompt: string;
-    };
-}
-
 const processImage = async (
     file: Express.Multer.File,
     clothingId: mongoose.Types.ObjectId
 ): Promise<ProcessImageResult> => {
-    // Ensure the uploads directory exists
-    const uploadDir = path.join(__dirname, '..', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+    const localFolderPath = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(localFolderPath)) {
+        fs.mkdirSync(localFolderPath, { recursive: true });
     }
 
-    const localFilePath = path.join(uploadDir, `${clothingId}${path.extname(file.originalname)}`);
-    const outputFilePath = path.join(uploadDir, `no-bg-${clothingId}${path.extname(file.originalname)}`);
+    const fileExtension = path.extname(file.originalname);
+    const newFileName = `${clothingId}${fileExtension}`;
+    const localFilePath = path.join(localFolderPath, newFileName);
+    const outputFilePath = path.join(localFolderPath, `no-bg-${newFileName}`);
 
     fs.writeFileSync(localFilePath, file.buffer);
 
     try {
-        // Remove background from the image
         const result = await removeBackgroundFromImageFile({
             path: localFilePath,
             apiKey: config.removeBgApiKey,
@@ -69,26 +48,14 @@ const processImage = async (
             crop: true,
         });
 
-        // Save processed image to a local file
         fs.writeFileSync(outputFilePath, result.base64img, { encoding: 'base64' });
-
-        // Upload to DigitalOcean Spaces
-        const data = await s3.upload({
-            Bucket: 'wardrobe-wizard', // Replace with your space name
-            Key: `uploads/no-bg-${clothingId}${path.extname(file.originalname)}`,
-            Body: fs.createReadStream(outputFilePath),
-            ACL: 'public-read',
-            ContentType: 'image/jpeg', // Adjust based on your image type
-        }).promise();
-
-        // Remove local files
         fs.unlinkSync(localFilePath);
-        fs.unlinkSync(outputFilePath);
 
-        return { imageUrl: data.Location };
+        return { outputPath: outputFilePath };
     } catch (error) {
-        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
-        if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
         throw error;
     }
 };
@@ -120,8 +87,6 @@ const analyzeImage = async (file: Express.Multer.File): Promise<ClothingItem> =>
         response_format: zodResponseFormat(ClothingSchema, "clothes")
     });
 
-    console.log(response.choices[0].message.content);
-
     return JSON.parse(response.choices[0].message.content || '{}');
 };
 
@@ -137,36 +102,22 @@ export const addClothing = async (
 
         const clothingId = new mongoose.Types.ObjectId();
         
-        const { imageUrl } = await processImage(req.file, clothingId);
-
-        console.log('Image URL:', imageUrl);
-
+        const { outputPath } = await processImage(req.file, clothingId);
         const clothingData = await analyzeImage(req.file);
-
-        console.log('Clothing data:', clothingData);
-
-        // Create a new clothing item and save it to the Clothing collection with the image URL
-        const clothingItem = new Clothing({
-            ...clothingData,
-            imagePath: imageUrl,
-            _id: clothingId,
-        });
-
-        console.log('Clothing item:', clothingItem);
-
-        await clothingItem.save();
-
-        // Find or create a Closet for the user
+        
         const closet = await Closet.findOne({ userId: req.user.id });
+        const clothingItem = {
+            ...clothingData,
+            imagePath: outputPath,
+        };
+
         if (!closet) {
             await Closet.create({
                 userId: req.user.id,
-                items: [clothingItem._id as mongoose.Types.ObjectId],
+                items: [clothingItem],
             });
         } else {
-            // Ensure closet.items is an array
-            closet.items = closet.items || [];
-            closet.items.push(clothingItem._id as mongoose.Types.ObjectId);
+            closet.items.push(clothingItem);
             await closet.save();
         }
 
@@ -210,7 +161,6 @@ export const getClothing = async (
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 
 export const generateOutfit = async (
     req: OutfitGenerationBody,
@@ -273,145 +223,28 @@ export const getClosetItems = async (
     req: AuthRequest,
     res: Response
 ): Promise<void> => {
-    if (!req.user?.id) {
-        res.status(400).json({ message: 'User not authenticated' });
-        return;
-    }
-
     try {
-        const closet = await Closet.findOne({ userId: req.user.id });
+        if(!req.user?.id) {
+            res.status(401).json({ message: 'User not authenticated' });
+            return;
+        }
+
+        const clothingType = req.query.type as String | undefined;
+        const closet = await Closet.findOne({ userId: req.user?.id })
 
         if (!closet) {
-            res.status(400).json({ message: 'No clothing items found' });
+            res.status(404).json({ message: 'Closet not found'});
             return;
         }
 
-        const filters: any = { _id: { $in: closet.items } };
+        // Filter items by ClothingType if specified
+        const items = clothingType
+            ? closet.items.filter(item => item.type === clothingType.toUpperCase())
+            : closet.items;
 
-        if (req.query.type) {
-            filters.type = req.query.type;
-        }
-        if (req.query.color) {
-            filters.primaryColor = req.query.color;
-        }
-        if (req.query.material) {
-            filters.material = req.query.material;
-        }
-
-        const clothingItems = await Clothing.find(filters);
-
-        if (clothingItems.length === 0) {
-            res.status(404).json({ message: 'No clothing items found matching the criteria' });
-            return;
-        }
-
-        res.status(200).json(clothingItems);
+        res.status(200).json(items);
     } catch (error) {
-        console.error('Error fetching closet items:', error);
+        console.error('Error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
-};
-
-export const deleteClothingItem = async (
-    req: AuthRequest,
-    res: Response
-): Promise<void> => {
-    if (!req.params.id) {
-        res.status(400).json({ message: 'Clothing item ID is required' });
-        return;
-    }
-
-    try {
-        const closet = await Closet.findOne({ userId: req.user?.id });
-
-        if (!closet) {
-            res.status(400).json({ message: 'No clothing items found' });
-            return;
-        }
-
-        // Convert req.params.id to ObjectId
-        const itemId = new mongoose.Types.ObjectId(req.params.id);
-
-        const index = closet.items.findIndex(item => item.equals(itemId));
-
-        if (index === -1) {
-            res.status(404).json({ message: 'Clothing item not found in closet' });
-            return;
-        }
-
-        // Remove the item from the closet
-        closet.items.splice(index, 1);
-
-        await closet.save();
-
-        //also remove the item from the Clothing collection
-        await Clothing.findByIdAndDelete(itemId);
-
-        res.status(200).json({ message: 'Clothing deleted' });
-    } catch (error) {
-        console.error('Error deleting clothing item:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-// Delete the outfit
-
-export const deleteOutfit = async (
-    req: AuthRequest,
-    res: Response
-): Promise<void> => {
-    if (!req.params.id) {
-        res.status(400).json({ message: 'Outfit ID is required' });
-        return;
-    }
-
-    try {
-        const outfit = await Outfit.findOneAndDelete({ userId: req.user?.id, _id: req.params.id });
-
-        if (!outfit) {
-            res.status(404).json({ message: 'Outfit not found' });
-            return;
-        }
-
-        res.status(200).json({ message: 'Outfit deleted' });
-    } catch (error) {
-        console.error('Error deleting outfit:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-export const saveOutfit = async (
-    req: AuthRequest,
-    res: Response
-): Promise<void> => {
-    if (!req.body.items) {
-        res.status(400).json({ message: 'Items array is required' });
-        return;
-    }
-
-    try {
-        const outfit = await Outfit.create({
-            userId: req.user?.id,
-            items: req.body.items,
-        });
-
-        res.status(201).json(outfit);
-    } catch (error) {
-        console.error('Error saving outfit:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-export const getOutfits = async (
-    req: AuthRequest,
-    res: Response
-): Promise<void> => {
-    try {
-        const outfits = await Outfit.find({ userId: req.user?.id });
-
-        res.status(200).json(outfits);
-    } catch (error) {
-        console.error('Error fetching outfits:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
+}
