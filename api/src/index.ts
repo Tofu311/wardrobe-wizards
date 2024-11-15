@@ -8,7 +8,8 @@ import cors from 'cors';
 const app = express();
 
 app.use(cors({
-    origin: false,
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   }));
   
 
