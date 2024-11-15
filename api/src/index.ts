@@ -3,16 +3,15 @@ import mongoose from 'mongoose';
 import { config } from './config';
 import userRoutes from './routes/user.route';
 import clothingRoutes from './routes/clothing.route';
-//import cors from 'cors';
+import cors from 'cors';
 
 const app = express();
 
-/*
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   }));
-*/  
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
