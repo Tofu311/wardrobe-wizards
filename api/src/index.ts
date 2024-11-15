@@ -8,8 +8,8 @@ import cors from 'cors';
 const app = express();
 
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: 'https://wardrobewizard.fashion', // Allow only the frontend origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   }));
   
 
