@@ -8,41 +8,40 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
+import { ClothingItem } from "../../../api/src/types/index";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // DEVELOPMENT ONLY
-const mockClothes = [
-  { id: 1, type: "TOP", imagePath: "/placeholder.svg?height=100&width=100" },
-  { id: 2, type: "BOTTOM", imagePath: "/placeholder.svg?height=100&width=100" },
+const mockClothes: ClothingItem[] = [
   {
-    id: 3,
-    type: "FOOTWEAR",
-    imagePath: "/placeholder.svg?height=100&width=100",
-  },
-  { id: 4, type: "TOP", imagePath: "/placeholder.svg?height=100&width=100" },
-  { id: 5, type: "BOTTOM", imagePath: "/placeholder.svg?height=100&width=100" },
-  {
-    id: 6,
-    type: "FOOTWEAR",
-    imagePath: "/placeholder.svg?height=100&width=100",
+    _id: "648b8bba3e2e456d6f5a8c2e",
+    type: "TOP",
+    imagePath: "/placeholder.svg",
+    primaryColor: "Blue",
+    material: "Cotton",
+    temperature: "Warm",
   },
   {
-    id: 7,
-    type: "HEADWEAR",
-    imagePath: "/placeholder.svg?height=100&width=100",
+    _id: "648b8bba3e2e456d6f5a8c3f",
+    type: "BOTTOM",
+    imagePath: "/placeholder2.svg",
+    primaryColor: "Black",
+    material: "Denim",
+    temperature: "Cold",
   },
-  {
-    id: 8,
-    type: "OUTERWEAR",
-    imagePath: "/placeholder.svg?height=100&width=100",
-  },
-  // Add more mock items as needed
 ];
 
 /*
@@ -62,14 +61,40 @@ export default function UserCloset() {
   const [activeTab, setActiveTab] = useState("closet");
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const switchTab = (tab: string) => {
     setActiveTab(tab);
   };
 
+  const fetchClothing = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const queryParams = filter.includes("all") ? "" : `?type=${filter[0]}`;
+      const response = await fetch(`${API_ROOT}/clothing${queryParams}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setClothes(await response.json());
+    } catch (error) {
+      console.error("Error fetching clothing:", error);
+      setError("Failed to fetch clothing items. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /*
   const filteredClothes = filter.includes("all")
     ? clothes
     : clothes.filter((item) => filter.includes(item.type));
+  */
 
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -103,19 +128,8 @@ export default function UserCloset() {
   };
 
   useEffect(() => {
-    fetch(`${API_ROOT}/clothing`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setClothes(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching clothing:", error);
-      });
-  }, []);
+    fetchClothing();
+  }, [filter]);
 
   return (
     <div className="flex h-screen bg-[#313D5A]">
@@ -282,28 +296,59 @@ export default function UserCloset() {
         {activeTab === "closet" && (
           <>
             <h1 className="text-3xl font-bold mb-6 text-white">My Closet</h1>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filteredClothes.map(
-                (item: { id: number; type: string; image: string }) => (
+            {isLoading ? (
+              <p className="text-white">Loading...</p>
+            ) : error ? (
+              <p className="text-red-500">{error}</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {clothes.map((item) => (
                   <div
-                    key={item.id}
-                    className="bg-muted rounded-lg p-2 flex items-center justify-center"
+                    key={item._id}
+                    className="aspect-square bg-white rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => setSelectedItem(item)}
                   >
-                    <img
-                      src={item.imagePath}
-                      alt={`Clothing item ${item.id}`}
-                      className="max-w-full h-auto"
-                    />
+                    <div className="w-full h-full relative">
+                      <img
+                        src={item.imagePath}
+                        alt={`${item.type} clothing item`}
+                        className="absolute inset-0 w-full h-full object-contain"
+                      />
+                    </div>
                   </div>
-                )
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </>
         )}
         {activeTab === "outfit" && (
           <h1 className="text-3xl font-bold mb-6 text-white">Saved Outfits</h1>
         )}
       </div>
+
+      {/* Item Detail Dialog */}
+      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{selectedItem?.type}</DialogTitle>
+            <DialogDescription>
+              Color: {selectedItem?.primaryColor || "N/A"}
+              <br />
+              Material: {selectedItem?.material || "N/A"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="w-full aspect-square relative bg-white rounded-lg p-4">
+            <img
+              src={selectedItem?.imagePath}
+              alt={`${selectedItem?.type} clothing item`}
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+          </div>
+          {selectedItem?.description && (
+            <p className="text-sm text-gray-500">{selectedItem.description}</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
