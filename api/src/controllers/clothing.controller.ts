@@ -187,8 +187,14 @@ export const getClothing = async (
             return;
         }
 
-        const clothingType = req.query.type as string | undefined;
-        const color = req.query.color as string | undefined; // Retrieve color from query
+       // Extract clothingType and color from the query, supporting multi-selection
+       const clothingTypes = req.query.clothingType
+       ? (Array.isArray(req.query.clothingType) ? req.query.clothingType : [req.query.clothingType]).map(type => type.toUpperCase())
+       : undefined;
+
+    const colors = req.query.color
+       ? (Array.isArray(req.query.color) ? req.query.color : [req.query.color]).map(color => color.toLowerCase())
+       : undefined;
 
         const closet = await Closet.findOne({ userId: req.user?.id }).populate<{ items: ClothingItem[] }>('items');
 
@@ -199,8 +205,8 @@ export const getClothing = async (
 
         // Filter items by ClothingType and color if specified
         const items = closet.items.filter((item) => {
-            const matchesType = clothingType ? item.type === clothingType.toUpperCase() : true;
-            const matchesColor = color ? item.primaryColor.toLowerCase() === color.toLowerCase() : true;
+            const matchesType = clothingTypes ? clothingTypes.includes(item.type.toUpperCase()) : true;
+            const matchesColor = colors ? colors.includes(item.primaryColor.toLowerCase()) : true;
             return matchesType && matchesColor;
         });
 
