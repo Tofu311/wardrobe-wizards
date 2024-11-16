@@ -10,7 +10,6 @@ export interface UserDocument extends Document {
   username: string;
   password: string;
   email: string;
-  verified: boolean; // New field for email verification
   geolocation: {
     type: string;
     coordinates: number[];
@@ -20,33 +19,29 @@ export interface UserDocument extends Document {
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
-export interface UserModel extends Model<UserDocument> {}
+export interface UserModel extends Model<UserDocument> {
+}
 
-const UserSchema = new mongoose.Schema(
-  {
-    name: {
-      first: { type: String, required: true },
-      last: { type: String, required: true },
-    },
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    verified: { type: Boolean, default: false }, // New field, default is false
-    geolocation: {
-      type: { type: String, default: "Point" },
-      coordinates: {
-        type: [Number],
-        required: true,
-      },
+const UserSchema = new mongoose.Schema({
+  name: {
+    first: { type: String, required: true },
+    last: { type: String, required: true },
+  },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  geolocation: {
+    type: { type: String, default: "Point" },
+    coordinates: {
+      type: [Number],
+      required: true,
     },
   },
-  {
-    timestamps: true,
-  }
-);
+}, {
+  timestamps: true,
+});
 
-// Method to match passwords
-UserSchema.methods.matchPassword = async function (enteredPassword: string): Promise<boolean> {
+UserSchema.methods.matchPassword = async function(enteredPassword: string): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

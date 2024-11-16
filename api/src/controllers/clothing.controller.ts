@@ -1,253 +1,417 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model';
+import { removeBackgroundFromImageFile } from 'remove.bg';
+import path from 'path';
+import fs from 'fs';
+import { OpenAI } from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import mongoose from 'mongoose';
+import { Closet } from '../models/closet.model';
+import { Clothing } from '../models/clothing.model';
 import { config } from '../config';
-import { AuthRequest } from '../types';
-import { WeatherData } from '../types';
-import axios from 'axios';
-import { sendVerificationEmail } from '../services/email.service';
+import { ClothingSchema, OutfitSchema } from '../schemas/clothing.schema';
+import { AuthRequest, ClothingItem } from '../types';
+import AWS from 'aws-sdk';
+import { Outfit } from '../models/outfit.model';
 
-interface RegisterRequestBody {
-    name: {
-        first: string;
-        last: string;
+const openai = new OpenAI({
+    apiKey: config.openAiKey,
+});
+
+const spacesEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+const s3 = new AWS.S3({
+    endpoint: config.spacesEndpoint,
+    accessKeyId: config.digitalOceanAccessKey,
+    secretAccessKey: config.digitalOceanSecretKey,
+    region: 'nyc3',
+});
+
+interface ProcessImageResult {
+    imageUrl: string;
+}
+
+interface MulterRequest extends AuthRequest {
+    file?: Express.Multer.File;
+}
+
+interface OutfitGenerationBody extends Request {
+    user?: {
+        id: string;
+        username: string;
     };
-    username: string;
-    email: string;
-    password: string;
-    geolocation: {
-        coordinates: number[];
+    body: {
+        prompt: string;
     };
 }
 
-interface LoginRequestBody {
-    username: string;
-    password: string;
-}
+const processImage = async (
+    file: Express.Multer.File,
+    clothingId: mongoose.Types.ObjectId
+): Promise<ProcessImageResult> => {
+    // Ensure the uploads directory exists
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
-export const fetchWeather = async (latitude: number, longitude: number): Promise<WeatherData> => {
-    const apiKey = process.env.WEATHER_API_KEY;
-    const response = await axios.get(`https://api.weatherapi.com/v1/current.json`, {
-        params: { key: apiKey, q: `${latitude},${longitude}` },
+    const localFilePath = path.join(uploadDir, `${clothingId}${path.extname(file.originalname)}`);
+    const outputFilePath = path.join(uploadDir, `no-bg-${clothingId}${path.extname(file.originalname)}`);
+
+    fs.writeFileSync(localFilePath, file.buffer);
+
+    try {
+        // Remove background from the image
+        const result = await removeBackgroundFromImageFile({
+            path: localFilePath,
+            apiKey: config.removeBgApiKey,
+            size: "preview",
+            type: "product",
+            scale: "80%",
+            crop: true,
+        });
+
+        // Save processed image to a local file
+        fs.writeFileSync(outputFilePath, result.base64img, { encoding: 'base64' });
+
+        // Upload to DigitalOcean Spaces
+        const data = await s3.upload({
+            Bucket: 'wardrobe-wizard', // Replace with your space name
+            Key: `uploads/no-bg-${clothingId}${path.extname(file.originalname)}`,
+            Body: fs.createReadStream(outputFilePath),
+            ACL: 'public-read',
+            ContentType: 'image/jpeg', // Adjust based on your image type
+        }).promise();
+
+        // Remove local files
+        fs.unlinkSync(localFilePath);
+        fs.unlinkSync(outputFilePath);
+
+        return { imageUrl: data.Location };
+    } catch (error) {
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+        if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+        throw error;
+    }
+};
+
+const analyzeImage = async (file: Express.Multer.File): Promise<ClothingItem> => {
+    const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+            {
+                role: 'system',
+                content: 'You are a fashion assistant.',
+            },
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: 'text',
+                        text: 'Classify this clothing item:',
+                    },
+                    {
+                        type: 'image_url',
+                        image_url: {
+                            url: `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
+                        },
+                    },
+                ]
+            },
+        ],
+        response_format: zodResponseFormat(ClothingSchema, "clothes")
     });
 
-    const weather = response.data;
+    console.log(response.choices[0].message.content);
 
-    return {
-        location: {
-            lat: weather.location.lat,
-            lon: weather.location.lon,
-        },
-        current: {
-            temp_c: weather.current.temp_c,
-            temp_f: weather.current.temp_f,
-            condition: {
-                text: weather.current.condition.text,
-                icon: weather.current.condition.icon,
-            },
-            wind_mph: weather.current.wind_mph,
-            wind_degree: weather.current.wind_degree,
-            humidity: weather.current.humidity,
-            cloud: weather.current.cloud,
-            feelslike_c: weather.current.feelslike_c,
-            feelslike_f: weather.current.feelslike_f,
-            uv: weather.current.uv,
-        },
-    };
+    return JSON.parse(response.choices[0].message.content || '{}');
 };
 
-export const register = async (
-    req: Request<{}, {}, RegisterRequestBody>,
+export const addClothing = async (
+    req: MulterRequest,
     res: Response
 ): Promise<void> => {
     try {
-        const { name, username, email, password, geolocation } = req.body;
-
-        const existingUser = await User.findOne({
-            $or: [{ username }, { email }],
-        });
-
-        if (existingUser) {
-            res.status(409).json({ message: "Username or email already exists" });
+        if (!req.file || !req.user?.id) {
+            res.status(400).json({ message: 'No image uploaded or user not authenticated' });
             return;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const clothingId = new mongoose.Types.ObjectId();
+        
+        const { imageUrl } = await processImage(req.file, clothingId);
 
-        // Create user with "verified" set to false
-        const user = await User.create({
-            name,
-            username,
-            email,
-            password: hashedPassword,
-            geolocation,
-            verified: false,
+        console.log('Image URL:', imageUrl);
+
+        const clothingData = await analyzeImage(req.file);
+
+        console.log('Clothing data:', clothingData);
+
+        // Create a new clothing item and save it to the Clothing collection with the image URL
+        const clothingItem = new Clothing({
+            ...clothingData,
+            imagePath: imageUrl,
+            _id: clothingId,
         });
 
-        // Generate a verification token
-        const verificationToken = jwt.sign(
-            { id: user._id },
-            config.jwtSecret,
-            { expiresIn: '1h' }
-        );
+        console.log('Clothing item:', clothingItem);
 
-        const verificationLink = `https://wardrobewizard.fashion/verify-email?token=${verificationToken}`;
+        await clothingItem.save();
 
-        // Send verification email
-        await sendVerificationEmail(email, verificationLink);
-
-        res.status(201).json({
-            message: "User registered successfully. Please check your email to verify your account.",
-        });
-    } catch (error) {
-        console.error("Error in registration:", error);
-        res.status(500).json({ message: "Error occurred during registration" });
-    }
-};
-
-export const login = async (
-    req: Request<{}, {}, LoginRequestBody>,
-    res: Response
-): Promise<void> => {
-    try {
-        const { username, password } = req.body;
-
-        const user = await User.findOne({ username });
-
-        if (!user || !(await user.matchPassword(password))) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
-        }
-
-        // Check if the user is verified
-        if (!user.verified) {
-            res.status(403).json({
-                message: 'Email not verified. Please check your email to verify your account.',
+        // Find or create a Closet for the user
+        const closet = await Closet.findOne({ userId: req.user.id });
+        if (!closet) {
+            await Closet.create({
+                userId: req.user.id,
+                items: [clothingItem._id as mongoose.Types.ObjectId],
             });
-            return;
+        } else {
+            // Ensure closet.items is an array
+            closet.items = closet.items || [];
+            closet.items.push(clothingItem._id as mongoose.Types.ObjectId);
+            await closet.save();
         }
 
-        const token = jwt.sign(
-            { id: user._id, username: user.username },
-            config.jwtSecret,
-            { expiresIn: '1h' }
-        );
-
-        res.json({
-            token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-            },
-        });
+        res.status(201).json(clothingItem);
     } catch (error) {
-        console.error("Error during login:", error);
-        res.status(500).json({ message: 'Error during login' });
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
-export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
-    const { token } = req.query;
-
-    try {
-        const decoded = jwt.verify(token as string, config.jwtSecret) as { id: string };
-
-        const user = await User.findById(decoded.id);
-
-        if (!user) {
-            res.status(404).send(`
-                <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
-                    <h1>Email Verification Failed</h1>
-                    <p>User not found. Please try again or contact support.</p>
-                    <a href="https://wardrobewizard.fashion" style="
-                        display: inline-block;
-                        margin-top: 20px;
-                        padding: 10px 20px;
-                        background-color: purple;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-size: 16px;
-                    ">Go to Login</a>
-                </div>
-            `);
-            return;
-        }
-
-        if (user.verified) {
-            res.status(400).send(`
-                <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
-                    <h1>Email Already Verified</h1>
-                    <p>Your email has already been verified. You can log in now.</p>
-                    <a href="https://wardrobewizard.fashion" style="
-                        display: inline-block;
-                        margin-top: 20px;
-                        padding: 10px 20px;
-                        background-color: purple;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        font-size: 16px;
-                    ">Go to Login</a>
-                </div>
-            `);
-            return;
-        }
-
-        user.verified = true;
-        await user.save();
-
-        res.send(`
-            <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
-                <h1>Email Verified Successfully</h1>
-                <p>Thank you for verifying your email. You can now log in.</p>
-                <a href="https://wardrobewizard.fashion" style="
-                    display: inline-block;
-                    margin-top: 20px;
-                    padding: 10px 20px;
-                    background-color: purple;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                ">Go to Login</a>
-            </div>
-        `);
-    } catch (error) {
-        console.error("Error verifying email:", error);
-        res.status(400).send(`
-            <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
-                <h1>Email Verification Failed</h1>
-                <p>The verification link is invalid or has expired. Please try again.</p>
-                <a href="https://wardrobewizard.fashion" style="
-                    display: inline-block;
-                    margin-top: 20px;
-                    padding: 10px 20px;
-                    background-color: purple;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                ">Go to Login</a>
-            </div>
-        `);
-    }
-};
-
-export const getProfile = async (
+export const getClothing = async (
     req: AuthRequest,
     res: Response
 ): Promise<void> => {
     try {
-        const user = await User.findById(req.user?.id).select('-password');
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
+        if (!req.user?.id) {
+            res.status(401).json({ message: 'User not authenticated' });
             return;
         }
-        res.json(user);
+
+        const clothingType = req.query.type as string | undefined;
+        const color = req.query.color as string | undefined; // Retrieve color from query
+
+        const closet = await Closet.findOne({ userId: req.user?.id }).populate<{ items: ClothingItem[] }>('items');
+
+        if (!closet) {
+            res.status(404).json({ message: 'Closet not found' });
+            return;
+        }
+
+        // Filter items by ClothingType and color if specified
+        const items = closet.items.filter((item) => {
+            const matchesType = clothingType ? item.type === clothingType.toUpperCase() : true;
+            const matchesColor = color ? item.primaryColor.toLowerCase() === color.toLowerCase() : true;
+            return matchesType && matchesColor;
+        });
+
+        res.status(200).json(items);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching profile' });
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+export const generateOutfit = async (
+    req: OutfitGenerationBody,
+    res: Response
+): Promise<void> => {
+    if (!req.user?.id) {
+        res.status(400).json({ message: 'User not authenticated' });
+        return;
+    }
+    
+    if (!req.body?.prompt) {
+        res.status(400).json({ message: 'Prompt is required' });
+        return;
+    }
+
+    try {
+        const closet = await Closet.findOne({ userId: req.user.id });
+
+        if (!closet) {
+            res.status(400).json({ message: 'No clothing items found' });
+            return;
+        }
+
+        const clothingItems = await Clothing.find({ _id: { $in: closet.items } });
+
+        var clothingPrompt = "Here's a list of clothes in your closet:\n";
+        for (const item of clothingItems) {
+            clothingPrompt += `- Clothing ID: ${item.id}; ${item.type} in ${item.primaryColor} made of ${item.material} with description: ${item.description} \n`;
+        }
+        console.log(clothingPrompt);
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a fashion assistant, pick an outfit for the user based on the provided clothing items.',
+                },
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: 'Generate an outfit from the provided clothing items, for this prompt: ' + req.body.prompt + "\n\n Using the following clothing items: \n" + clothingPrompt + "\n You should return an array of the clothing item ids. An outfit should bare minimum consist of a top, bottom, and shoes, but can also include outerwear, headwear, and more.",
+                        }
+                    ]
+                },
+            ],
+            response_format: zodResponseFormat(OutfitSchema, "outfit")
+        });
+
+        res.status(200).json(JSON.parse(response.choices[0].message.content as string));
+    } catch (error) {
+        console.error('Error generating outfit:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const getClosetItems = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.user?.id) {
+        res.status(400).json({ message: 'User not authenticated' });
+        return;
+    }
+
+    try {
+        const closet = await Closet.findOne({ userId: req.user.id });
+
+        if (!closet) {
+            res.status(400).json({ message: 'No clothing items found' });
+            return;
+        }
+
+        const filters: any = { _id: { $in: closet.items } };
+
+        if (req.query.type) {
+            filters.type = req.query.type;
+        }
+        if (req.query.color) {
+            filters.primaryColor = req.query.color;
+        }
+        if (req.query.material) {
+            filters.material = req.query.material;
+        }
+
+        const clothingItems = await Clothing.find(filters);
+
+        if (clothingItems.length === 0) {
+            res.status(404).json({ message: 'No clothing items found matching the criteria' });
+            return;
+        }
+
+        res.status(200).json(clothingItems);
+    } catch (error) {
+        console.error('Error fetching closet items:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const deleteClothingItem = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.params.id) {
+        res.status(400).json({ message: 'Clothing item ID is required' });
+        return;
+    }
+
+    try {
+        const closet = await Closet.findOne({ userId: req.user?.id });
+
+        if (!closet) {
+            res.status(400).json({ message: 'No clothing items found' });
+            return;
+        }
+
+        // Convert req.params.id to ObjectId
+        const itemId = new mongoose.Types.ObjectId(req.params.id);
+
+        const index = closet.items.findIndex(item => item.equals(itemId));
+
+        if (index === -1) {
+            res.status(404).json({ message: 'Clothing item not found in closet' });
+            return;
+        }
+
+        // Remove the item from the closet
+        closet.items.splice(index, 1);
+
+        await closet.save();
+
+        //also remove the item from the Clothing collection
+        await Clothing.findByIdAndDelete(itemId);
+
+        res.status(200).json({ message: 'Clothing deleted' });
+    } catch (error) {
+        console.error('Error deleting clothing item:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// Delete the outfit
+
+export const deleteOutfit = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.params.id) {
+        res.status(400).json({ message: 'Outfit ID is required' });
+        return;
+    }
+
+    try {
+        const outfit = await Outfit.findOneAndDelete({ userId: req.user?.id, _id: req.params.id });
+
+        if (!outfit) {
+            res.status(404).json({ message: 'Outfit not found' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Outfit deleted' });
+    } catch (error) {
+        console.error('Error deleting outfit:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const saveOutfit = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    if (!req.body.items) {
+        res.status(400).json({ message: 'Items array is required' });
+        return;
+    }
+
+    try {
+        const outfit = await Outfit.create({
+            userId: req.user?.id,
+            items: req.body.items,
+        });
+
+        res.status(201).json(outfit);
+    } catch (error) {
+        console.error('Error saving outfit:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const getOutfits = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        const outfits = await Outfit.find({ userId: req.user?.id });
+
+        res.status(200).json(outfits);
+    } catch (error) {
+        console.error('Error fetching outfits:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
