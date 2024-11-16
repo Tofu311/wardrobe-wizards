@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wardrobe_wizard/clothing.dart';
@@ -48,13 +50,15 @@ class _ClosetState extends State<Closet> {
     ),
   ];
   final ImagePicker _picker = ImagePicker();
-  XFile? _image;
+  final List<XFile> images = [];
 
   Future<void> takePicture() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-    setState(() {
-      _image = image;
-    });
+    if (image != null) {
+      setState(() {
+        images.add(image);
+      });
+    }
   }
 
   //TODO: Implement sorting by type and adding clothes
@@ -110,6 +114,8 @@ class _ClosetState extends State<Closet> {
                 }).toList(),
               ),
             ),
+            //Sample data GridView
+            /*
             Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -167,6 +173,33 @@ class _ClosetState extends State<Closet> {
                           ),
                         ],
                       ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            */
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                ),
+                itemCount: images.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Card(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Image.file(
+                            File(images[index].path),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Item ${index + 1}'),
+                        ),
+                      ],
                     ),
                   );
                 },
