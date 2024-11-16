@@ -11,8 +11,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { PlusCircle } from "lucide-react";
+import axios from "axios";
+
+const API_ROOT = "http://localhost:3000/api"; // local
+// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // DEVELOPMENT ONLY
 const mockClothes = [
@@ -43,6 +46,7 @@ export default function UserCloset() {
   const [clothes, setClothes] = useState(mockClothes);
   const [activeTab, setActiveTab] = useState("closet");
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const switchTab = (tab: string) => {
     setActiveTab(tab);
@@ -71,13 +75,30 @@ export default function UserCloset() {
 
     setIsUploading(true);
 
-    // Send file to API for classification and storage
-    // For now, just simulate the process with a timeout
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
 
-    // Simulate type classification (replace with actual API call in production)
-    const type = ["top", "bottom", "footwear"][Math.floor(Math.random() * 3)];
+      // Call addClothing endpoint
+      const response = await axios.post(`${API_ROOT}/clothing`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
+      if (response.status === 201) {
+        const newItem = response.data;
+        setClothes((prevClothes) => [...prevClothes, newItem]);
+      } else {
+        console.error("Failed to add clothing item");
+      }
+    } catch (error) {
+      console.error("Error uplading image:", error);
+    } finally {
+      setIsUploading(false);
+    }
+
+    /*
     const newItem = {
       id: clothes.length + 1,
       type: type,
@@ -86,6 +107,7 @@ export default function UserCloset() {
 
     setClothes([...clothes, newItem]);
     setIsUploading(false);
+    */
   };
 
   return (
@@ -125,7 +147,7 @@ export default function UserCloset() {
               filter.includes("all") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
-            onClick={() => setFilter("all")}
+            onClick={() => setFilter(["all"])}
           >
             All
           </Button>
@@ -227,10 +249,20 @@ export default function UserCloset() {
                     id="picture"
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e) =>
+                      setSelectedFile(e.target.files?.[0] || null)
+                    }
                     disabled={isUploading}
                   />
                 </div>
+                <Button
+                  onClick={() =>
+                    selectedFile && handleImageUpload(selectedFile)
+                  }
+                  disabled={!selectedFile || isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Upload Image"}
+                </Button>
                 {isUploading && <p>Uploading...</p>}
               </div>
             </SheetContent>
