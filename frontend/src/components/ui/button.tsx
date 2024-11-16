@@ -16,9 +16,9 @@ const buttonVariants = cva(
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         outline_closet:
-          "border border-input bg-[#FFF9DF] shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "bg-[#CBC5EA] text-black shadow-sm shadow hover:bg-primary/50 hover:text-[#CBC5EA]",
         default_closet: 
-          "bg-[#183642] text-primary-foreground shadow hover:bg-primary/90",
+          "bg-primary/90 text-[#CBC5EA] shadow hover:bg-primary/90",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
