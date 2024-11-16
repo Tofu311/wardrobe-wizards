@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,21 +12,36 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
-import axios from "axios";
 
-const API_ROOT = "http://localhost:3000/api"; // local
-// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // DEVELOPMENT ONLY
 const mockClothes = [
-  { id: 1, type: "top", image: "/placeholder.svg?height=100&width=100" },
-  { id: 2, type: "bottom", image: "/placeholder.svg?height=100&width=100" },
-  { id: 3, type: "footwear", image: "/placeholder.svg?height=100&width=100" },
-  { id: 4, type: "top", image: "/placeholder.svg?height=100&width=100" },
-  { id: 5, type: "bottom", image: "/placeholder.svg?height=100&width=100" },
-  { id: 6, type: "footwear", image: "/placeholder.svg?height=100&width=100" },
-  { id: 7, type: "headwear", image: "/placeholder.svg?height=100&width=100" },
-  { id: 8, type: "outerwear", image: "/placeholder.svg?height=100&width=100" },
+  { id: 1, type: "TOP", imagePath: "/placeholder.svg?height=100&width=100" },
+  { id: 2, type: "BOTTOM", imagePath: "/placeholder.svg?height=100&width=100" },
+  {
+    id: 3,
+    type: "FOOTWEAR",
+    imagePath: "/placeholder.svg?height=100&width=100",
+  },
+  { id: 4, type: "TOP", imagePath: "/placeholder.svg?height=100&width=100" },
+  { id: 5, type: "BOTTOM", imagePath: "/placeholder.svg?height=100&width=100" },
+  {
+    id: 6,
+    type: "FOOTWEAR",
+    imagePath: "/placeholder.svg?height=100&width=100",
+  },
+  {
+    id: 7,
+    type: "HEADWEAR",
+    imagePath: "/placeholder.svg?height=100&width=100",
+  },
+  {
+    id: 8,
+    type: "OUTERWEAR",
+    imagePath: "/placeholder.svg?height=100&width=100",
+  },
   // Add more mock items as needed
 ];
 
@@ -56,21 +71,7 @@ export default function UserCloset() {
     ? clothes
     : clothes.filter((item) => filter.includes(item.type));
 
-  /*
-  const addClothing = (type: string) => {
-    const newItem = {
-      id: clothes.length + 1,
-      type: type,
-      image: "/placeholder.svg?height=100&width=100",
-    };
-    setClothes([...clothes, newItem]);
-  };
-  */
-
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImageUpload = async (file: File) => {
     if (!file) return;
 
     setIsUploading(true);
@@ -79,36 +80,42 @@ export default function UserCloset() {
       const formData = new FormData();
       formData.append("image", file);
 
-      // Call addClothing endpoint
-      const response = await axios.post(`${API_ROOT}/clothing`, formData, {
+      const response = await fetch(`${API_ROOT}/clothing`, {
+        method: "POST",
         headers: {
-          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
+        body: formData,
       });
 
       if (response.status === 201) {
-        const newItem = response.data;
+        const newItem = await response.json();
         setClothes((prevClothes) => [...prevClothes, newItem]);
+        setSelectedFile(null);
       } else {
-        console.error("Failed to add clothing item");
+        throw new Error("Failed to add clothing item");
       }
     } catch (error) {
-      console.error("Error uplading image:", error);
+      console.error("Error uploading image:", error);
     } finally {
       setIsUploading(false);
     }
-
-    /*
-    const newItem = {
-      id: clothes.length + 1,
-      type: type,
-      image: URL.createObjectURL(file),
-    };
-
-    setClothes([...clothes, newItem]);
-    setIsUploading(false);
-    */
   };
+
+  useEffect(() => {
+    fetch(`${API_ROOT}/clothing`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setClothes(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching clothing:", error);
+      });
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#313D5A]">
@@ -153,14 +160,14 @@ export default function UserCloset() {
           </Button>
           <Button
             variant={
-              filter.includes("headwear") ? "default_closet" : "outline_closet"
+              filter.includes("HEADWEAR") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
             onClick={() =>
               setFilter((prev) =>
-                prev.includes("headwear")
-                  ? prev.filter((f: string) => f !== "headwear")
-                  : ["headwear"]
+                prev.includes("HEADWEAR")
+                  ? prev.filter((f: string) => f !== "HEADWEAR")
+                  : ["HEADWEAR"]
               )
             }
           >
@@ -168,14 +175,14 @@ export default function UserCloset() {
           </Button>
           <Button
             variant={
-              filter.includes("top") ? "default_closet" : "outline_closet"
+              filter.includes("TOP") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
             onClick={() =>
               setFilter((prev) =>
-                prev.includes("top")
-                  ? prev.filter((f: string) => f !== "top")
-                  : ["top"]
+                prev.includes("TOP")
+                  ? prev.filter((f: string) => f !== "TOP")
+                  : ["TOP"]
               )
             }
           >
@@ -183,29 +190,29 @@ export default function UserCloset() {
           </Button>
           <Button
             variant={
-              filter.includes("outerwear") ? "default_closet" : "outline_closet"
+              filter.includes("OUTERWEAR") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
             onClick={() =>
               setFilter((prev) =>
-                prev.includes("outerwear")
-                  ? prev.filter((f: string) => f !== "outerwear")
-                  : ["outerwear"]
+                prev.includes("OUTERWEAR")
+                  ? prev.filter((f: string) => f !== "OUTERWEAR")
+                  : ["OUTERWEAR"]
               )
             }
           >
-            Outewear
+            Outerwear
           </Button>
           <Button
             variant={
-              filter.includes("bottom") ? "default_closet" : "outline_closet"
+              filter.includes("BOTTOM") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
             onClick={() =>
               setFilter((prev) =>
-                prev.includes("bottom")
-                  ? prev.filter((f: string) => f !== "bottom")
-                  : ["bottom"]
+                prev.includes("BOTTOM")
+                  ? prev.filter((f: string) => f !== "BOTTOM")
+                  : ["BOTTOM"]
               )
             }
           >
@@ -213,14 +220,14 @@ export default function UserCloset() {
           </Button>
           <Button
             variant={
-              filter.includes("footwear") ? "default_closet" : "outline_closet"
+              filter.includes("FOOTWEAR") ? "default_closet" : "outline_closet"
             }
             className="mb-2 w-full justify-start"
             onClick={() =>
               setFilter((prev) =>
-                prev.includes("footwear")
-                  ? prev.filter((f: string) => f !== "footwear")
-                  : ["footwear"]
+                prev.includes("FOOTWEAR")
+                  ? prev.filter((f: string) => f !== "FOOTWEAR")
+                  : ["FOOTWEAR"]
               )
             }
           >
@@ -283,7 +290,7 @@ export default function UserCloset() {
                     className="bg-muted rounded-lg p-2 flex items-center justify-center"
                   >
                     <img
-                      src={item.image}
+                      src={item.imagePath}
                       alt={`Clothing item ${item.id}`}
                       className="max-w-full h-auto"
                     />

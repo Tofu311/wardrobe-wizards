@@ -94,6 +94,9 @@ function LoginPage() {
       });
 
       if (response.status === 201 || response.status === 200) {
+        response.json().then((data) => {
+          localStorage.setItem("token", data.token);
+        });
         navigate("/closet");
         console.log("User registered successfully.");
       } else {
@@ -119,6 +122,9 @@ function LoginPage() {
       });
 
       if (response.status === 201 || response.status === 200) {
+        response.json().then((data) => {
+          localStorage.setItem("token", data.token);
+        });
         navigate("/closet");
         console.log("User logged in successfully.");
       } else {
