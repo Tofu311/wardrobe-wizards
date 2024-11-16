@@ -11,12 +11,25 @@ interface Config {
     spacesEndpoint: string;
     digitalOceanAccessKey: string;
     digitalOceanSecretKey: string;
+    emailService: string;
+    emailUser: string;
+    emailPass: string;
 }
 
-if (!process.env.JWT_SECRET || !process.env.DATABASE_URL || !process.env.OPENAI_API_KEY || !process.env.REMOVE_BG_API_KEY || !process.env.SPACES_ENDPOINT || !process.env.DIGITAL_OCEAN_ACCESS_KEY || !process.env.DIGITAL_OCEAN_SECRET_KEY) {
+if (
+    !process.env.JWT_SECRET ||
+    !process.env.DATABASE_URL ||
+    !process.env.OPENAI_API_KEY ||
+    !process.env.REMOVE_BG_API_KEY ||
+    !process.env.SPACES_ENDPOINT ||
+    !process.env.DIGITAL_OCEAN_ACCESS_KEY ||
+    !process.env.DIGITAL_OCEAN_SECRET_KEY ||
+    !process.env.EMAIL_SERVICE ||
+    !process.env.EMAIL_USER ||
+    !process.env.EMAIL_PASS
+) {
     throw new Error('Missing required environment variables');
 }
-
 
 // Fill in the environment vars
 export const config: Config = {
@@ -28,4 +41,7 @@ export const config: Config = {
     spacesEndpoint: process.env.SPACES_ENDPOINT,
     digitalOceanAccessKey: process.env.DIGITAL_OCEAN_ACCESS_KEY,
     digitalOceanSecretKey: process.env.DIGITAL_OCEAN_SECRET_KEY,
+    emailService: process.env.EMAIL_SERVICE, 
+    emailUser: process.env.EMAIL_USER, 
+    emailPass: process.env.EMAIL_PASS, 
 };
