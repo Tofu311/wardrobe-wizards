@@ -6,6 +6,7 @@
   ],
   "compilerOptions": {
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
