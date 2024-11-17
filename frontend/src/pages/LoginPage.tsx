@@ -125,7 +125,9 @@ function LoginPage() {
         response.json().then((data) => {
           localStorage.setItem("token", data.token);
         });
-        navigate("/closet");
+        setTimeout(() => {
+          navigate("/closet");
+        }, 500);
         console.log("User logged in successfully.");
       } else {
         const data = await response.json();
