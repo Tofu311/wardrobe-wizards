@@ -9,7 +9,7 @@ import { Closet } from '../models/closet.model';
 import { Clothing } from '../models/clothing.model';
 import { config } from '../config';
 import { ClothingSchema, OutfitSchema, ClothingType } from '../schemas/clothing.schema';
-import { AuthRequest, ClothingItem } from '../types';
+import { AuthRequest, ClothingItem, GetClothingQuery } from '../types';
 import AWS from 'aws-sdk';
 import { Outfit } from '../models/outfit.model';
 
@@ -187,23 +187,30 @@ export const getClothing = async (
             return;
         }
 
-       // Extract clothingType and color from the query, supporting multi-selection
-       const clothingTypes = req.query.clothingType
-       ? (Array.isArray(req.query.clothingType) ? req.query.clothingType : [req.query.clothingType]).map(type => type.toUpperCase())
-       : undefined;
+        const query = req.query as Partial<GetClothingQuery>;
 
-    const colors = req.query.color
-       ? (Array.isArray(req.query.color) ? req.query.color : [req.query.color]).map(color => color.toLowerCase())
-       : undefined;
+        const clothingTypes =
+        query.clothingType !== undefined
+            ? Array.isArray(query.clothingType)
+                ? query.clothingType.map((type) => type.toUpperCase())
+                : [query.clothingType.toUpperCase()]
+            : undefined;
 
-        const closet = await Closet.findOne({ userId: req.user?.id }).populate<{ items: ClothingItem[] }>('items');
+        const colors =
+            query.color !== undefined
+                ? Array.isArray(query.color)
+                    ? query.color.map((color) => color.toLowerCase())
+                    : [query.color.toLowerCase()]
+                : undefined;
+
+        const closet = await Closet.findOne({ userId: req.user.id }).populate<{ items: ClothingItem[] }>('items');
 
         if (!closet) {
             res.status(404).json({ message: 'Closet not found' });
             return;
         }
 
-        // Filter items by ClothingType and color if specified
+        // Filter items by clothingType and color if specified
         const items = closet.items.filter((item) => {
             const matchesType = clothingTypes ? clothingTypes.includes(item.type.toUpperCase()) : true;
             const matchesColor = colors ? colors.includes(item.primaryColor.toLowerCase()) : true;

@@ -84,3 +84,8 @@ export interface OutfitDocument extends Document {
     userId: Types.ObjectId;
     items: Types.ObjectId[];
 }
+
+export interface GetClothingQuery {
+    clothingType?: string | string[];
+    color?: string | string[];
+}
