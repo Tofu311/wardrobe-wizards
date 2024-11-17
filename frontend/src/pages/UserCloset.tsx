@@ -23,6 +23,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,6 +45,8 @@ import { useNavigate } from "react-router-dom";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+
+const CLOTHING_TYPES = ["HEADWEAR", "TOP", "OUTERWEAR", "BOTTOM", "FOOTWEAR"];
 
 // DEVELOPMENT ONLY
 const mockClothes: ClothingItem[] = [
@@ -141,6 +150,34 @@ export default function UserCloset() {
       console.error("Error uploading image:", error);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleReclassify = async (clothingId: string, newType: string) => {
+    try {
+      // LOCAL DEVELOPMENT URL: Change to prod later
+      const response = await fetch(`${API_ROOT}/${clothingId}/reclassify`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ type: newType }),
+      });
+
+      if (response.status === 200) {
+        //const updatedClothing = await response.json();
+        setClothes((prevClothes) =>
+          prevClothes.map((item) =>
+            item._id === clothingId ? { ...item, type: newType } : item
+          )
+        );
+        setSelectedItem(null);
+      } else {
+        throw new Error("Failed to reclassify clothing item");
+      }
+    } catch (error) {
+      console.error("Error reclassifying clothing:", error);
     }
   };
 
@@ -604,6 +641,23 @@ export default function UserCloset() {
           {selectedItem?.description && (
             <p className="text-sm text-gray-500">{selectedItem.description}</p>
           )}
+          <Select
+            defaultValue={selectedItem?.type}
+            onValueChange={(value) =>
+              selectedItem && handleReclassify(selectedItem._id, value)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select clothing type" />
+            </SelectTrigger>
+            <SelectContent>
+              {CLOTHING_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type.charAt(0) + type.slice(1).toLowerCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </DialogContent>
       </Dialog>
     </div>
