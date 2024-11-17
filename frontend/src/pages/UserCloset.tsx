@@ -40,7 +40,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { PlusCircle } from "lucide-react";
-import { ClothingItem } from "../../../api/src/types/index";
+import { ClothingItem } from "../types/types";
 import { useNavigate } from "react-router-dom";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
