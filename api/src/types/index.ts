@@ -48,6 +48,7 @@ export interface UserDocument extends Document {
 }
 
 export interface ClothingItem {
+    _id: string;
     imagePath: string;
     type: string;
     primaryColor: string;

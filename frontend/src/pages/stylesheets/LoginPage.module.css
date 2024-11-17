@@ -1,0 +1,77 @@
+/* stylesheets/LoginPage.module.css */
+
+.backgroundContainer {
+  background-image: url('/assets/images/star-background.jpeg');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formContainer {
+  background-color: #73628A; /* Purple background */
+  padding: 2rem;
+  width: 100%; /* Responsive width */
+  height: 500px;
+  color: white; /* Text color for better readability */
+  border-radius: 0; /* Ensure it doesn't conflict */
+}
+
+.formContainer .errorMessage {
+  color: red !important;
+}
+
+.welcomeContainer {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  background-color: #CBC5EA;
+  padding: 2rem;
+  width: 100%; /* Responsive width */
+  height: 500px;
+  color: black; /* Text color for better readability */
+  align-items: center;
+  gap: 15px;
+  justify-content: center; /* Center items vertically within the container */
+  text-align: center; /* Center-align text */
+}
+
+.loginLogo {
+  width: 70%; /* Adjust width as needed */
+  height: auto;
+}
+
+.outerContainer {
+  display: flex; /* Flexbox for side-by-side layout */
+  align-items: stretch; /* Stretch to make both boxes the same height */
+  gap: 0rem; /* Space between the two boxes */
+  width: 55%; /* Responsive width */
+  height: 100%; /* Responsive height */
+}
+
+.labels {
+  color: white;
+}
+
+.inputField {
+  color:black;
+  background-color: white;
+}
+
+.inputField::placeholder {
+  color: black;
+  opacity: 100%;
+}
+
+.roundedRight {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.roundedLeft {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+

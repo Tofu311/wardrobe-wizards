@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 import { Closet } from '../models/closet.model';
 import { Clothing } from '../models/clothing.model';
 import { config } from '../config';
-import { ClothingSchema, OutfitSchema } from '../schemas/clothing.schema';
+import { ClothingSchema, OutfitSchema, ClothingType } from '../schemas/clothing.schema';
 import { AuthRequest, ClothingItem } from '../types';
 import AWS from 'aws-sdk';
 import { Outfit } from '../models/outfit.model';
@@ -187,8 +187,14 @@ export const getClothing = async (
             return;
         }
 
-        const clothingType = req.query.type as string | undefined;
-        const color = req.query.color as string | undefined; // Retrieve color from query
+       // Extract clothingType and color from the query, supporting multi-selection
+       const clothingTypes = req.query.clothingType
+       ? (Array.isArray(req.query.clothingType) ? req.query.clothingType : [req.query.clothingType]).map(type => type.toUpperCase())
+       : undefined;
+
+    const colors = req.query.color
+       ? (Array.isArray(req.query.color) ? req.query.color : [req.query.color]).map(color => color.toLowerCase())
+       : undefined;
 
         const closet = await Closet.findOne({ userId: req.user?.id }).populate<{ items: ClothingItem[] }>('items');
 
@@ -199,8 +205,8 @@ export const getClothing = async (
 
         // Filter items by ClothingType and color if specified
         const items = closet.items.filter((item) => {
-            const matchesType = clothingType ? item.type === clothingType.toUpperCase() : true;
-            const matchesColor = color ? item.primaryColor.toLowerCase() === color.toLowerCase() : true;
+            const matchesType = clothingTypes ? clothingTypes.includes(item.type.toUpperCase()) : true;
+            const matchesColor = colors ? colors.includes(item.primaryColor.toLowerCase()) : true;
             return matchesType && matchesColor;
         });
 
@@ -415,3 +421,39 @@ export const getOutfits = async (
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+export const reclassifyClothing = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { clothingId } = req.params;
+        const { type } = req.body;
+
+        // Validate new type fits within the allowed types
+        const ALLOWED_TYPES = ClothingType._def.values;
+        if (!ALLOWED_TYPES.includes(type)) {
+            res.status(400).json({
+                message: `Invalid type. Allowed types are: ${ALLOWED_TYPES.join(', ')}.`,
+            });
+            return;
+        }
+
+        // Verify user
+        if (!req.user?.id) {
+            res.status(400).json({ message: 'User not authenticated' });
+            return;
+        }
+
+        const clothing = await Clothing.findById(clothingId);
+        if(!clothing) {
+            res.status(404).json({message: 'Clothing item not found'});
+            return;
+        }
+
+        clothing.type = type;
+        await clothing?.save();
+
+        res.status(200).json({message: 'Clothing reclassified sucessfully', clothing});
+    } catch (error) {
+        console.error('Error reclassifying clothing:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
