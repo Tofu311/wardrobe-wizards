@@ -15,6 +15,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +31,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 import { PlusCircle } from "lucide-react";
 import { ClothingItem } from "../../../api/src/types/index";
 
@@ -50,17 +58,6 @@ const mockClothes: ClothingItem[] = [
   },
 ];
 
-/*
-const mockOutfits = [
-  { id: 1, image: "/placeholder.svg?height=100&width=100" },
-  { id: 2, image: "/placeholder.svg?height=100&width=100" },
-  { id: 3, image: "/placeholder.svg?height=100&width=100" },
-  { id: 4, image: "/placeholder.svg?height=100&width=100" },
-  { id: 5, image: "/placeholder.svg?height=100&width=100" },
-  { id: 6, image: "/placeholder.svg?height=100&width=100" },
-  // Add more mock items as needed
-];*/
-
 export default function UserCloset() {
   const [filter, setFilter] = useState<string[]>(["all"]);
   const [clothes, setClothes] = useState<ClothingItem[]>(mockClothes);
@@ -80,7 +77,7 @@ export default function UserCloset() {
     setError(null);
 
     try {
-      const queryParams = filter.includes("all") ? "" : `?type=${filter[0]}`;
+      const queryParams = "";
       const response = await fetch(`${API_ROOT}/clothing${queryParams}`, {
         method: "GET",
         headers: {
@@ -97,11 +94,19 @@ export default function UserCloset() {
     }
   };
 
-  /*
   const filteredClothes = filter.includes("all")
-    ? clothes
-    : clothes.filter((item) => filter.includes(item.type));
-  */
+      ? clothes
+      : clothes.filter((item) => {
+          return filter.some((f) => {
+            if (["RED", "BLUE", "GREEN", "YELLOW", "PURPLE"].includes(f)) {
+              return item.primaryColor.toUpperCase() === f; // Check for color
+            }
+            if (["HEADWEAR", "TOP", "OUTERWEAR", "BOTTOM", "FOOTWEAR"].includes(f)) {
+              return item.type === f; // Check for type
+            }
+            return false; // Default case
+          });
+      });
 
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -435,11 +440,11 @@ export default function UserCloset() {
               ) : error ? (
                 <p className="p-4 text-yellow-500">{error}</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-auto">
-                  {clothes.map((item) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-auto p-4">
+                  {filteredClothes.map((item) => (
                     <div
                       key={item._id}
-                      className="aspect-square bg-white rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="aspect-square bg-[#FFF3BB] bg-opacity-80 rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => setSelectedItem(item)}
                     >
                       <div className="w-full h-full relative">
@@ -473,9 +478,49 @@ export default function UserCloset() {
           <DialogHeader>
             <DialogTitle>{selectedItem?.type}</DialogTitle>
             <DialogDescription>
-              Color: {selectedItem?.primaryColor || "N/A"}
+              Color: 
+                <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center">
+                  {selectedItem?.primaryColor || "N/A"}
+                  <svg
+                  className="ml-2 h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                  </svg>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Select a Color</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Red</DropdownMenuItem>
+                  <DropdownMenuItem>Blue</DropdownMenuItem>
+                  <DropdownMenuItem>Green</DropdownMenuItem>
+                  <DropdownMenuItem>Yellow</DropdownMenuItem>
+                  <DropdownMenuItem>Purple</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <br />
-              Material: {selectedItem?.material || "N/A"}
+              Material: 
+              <DropdownMenu>
+                <DropdownMenuTrigger>              
+                  {selectedItem?.material || "N/A"}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Select a Material</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Red</DropdownMenuItem>
+                  <DropdownMenuItem>Blue</DropdownMenuItem>
+                  <DropdownMenuItem>Green</DropdownMenuItem>
+                  <DropdownMenuItem>Yellow</DropdownMenuItem>
+                  <DropdownMenuItem>Purple</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </DialogDescription>
           </DialogHeader>
           <div className="w-full aspect-square relative bg-white rounded-lg p-4">
