@@ -156,14 +156,17 @@ export default function UserCloset() {
   const handleReclassify = async (clothingId: string, newType: string) => {
     try {
       // LOCAL DEVELOPMENT URL: Change to prod later
-      const response = await fetch(`${API_ROOT}/${clothingId}/reclassify`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ type: newType }),
-      });
+      const response = await fetch(
+        `${API_ROOT}/clothing/${clothingId}/reclassify`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ type: newType }),
+        }
+      );
 
       if (response.status === 200) {
         //const updatedClothing = await response.json();
