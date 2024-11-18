@@ -6,6 +6,7 @@ import { config } from '../config';
 import { AuthRequest } from '../types';
 import { WeatherData } from '../types';
 import axios from 'axios';
+import { sendVerificationEmail } from '../services/email.service';
 
 interface RegisterRequestBody {
     name: {
@@ -57,23 +58,18 @@ export const fetchWeather = async (latitude: number, longitude: number): Promise
             uv: weather.current.uv,
         }
     };
-}
+};
 
 export const register = async (
     req: Request<{}, {}, RegisterRequestBody>,
     res: Response
 ): Promise<void> => {
     try {
-        // const { name, username, email, password, geolocation } = req.body;
         const { name, username, email, password, geolocation } = req.body;
 
-        console.log(name, username, email, password, geolocation);
-
-        const existingUser = await User.findOne({ 
-            $or: [{ username }, { email }] 
+        const existingUser = await User.findOne({
+            $or: [{ username }, { email }],
         });
-        
-        console.log(existingUser);
 
         if (existingUser) {
             res.status(409).json({ message: "Username or email already exists" });
@@ -82,45 +78,35 @@ export const register = async (
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Create a new user with `verified: false`
         const user = await User.create({
             name,
             username,
             email,
             password: hashedPassword,
-            geolocation
+            geolocation,
+            verified: false,
         });
 
-        const token = jwt.sign(
-            { id: user._id, username: user.username },
+        // Generate a verification token
+        const verificationToken = jwt.sign(
+            { id: user._id },
             config.jwtSecret,
             { expiresIn: '1h' }
         );
 
-        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
+        // Generate the verification link
+        const verificationLink = `https://wardrobewizard.fashion/verify-email?token=${verificationToken}`;
+
+        // Send verification email
+        await sendVerificationEmail(email, verificationLink);
 
         res.status(201).json({
-            token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email
-            },
-            // weather
+            message: "User registered successfully. Please check your email to verify your account.",
         });
     } catch (error) {
-        // Log full error details to console
         console.error("Error in registration:", error);
-
-        if (error instanceof Error) {
-            res.status(500).json({ message: "Error occurred during registration",
-                error: error.message
-             });
-        } else {
-            res.status(500).json({
-                message: "An error occurred during registration.",
-                error: "Unknown error"
-            });
-        }
+        res.status(500).json({ message: "Error occurred during registration" });
     }
 };
 
@@ -129,17 +115,20 @@ export const login = async (
     res: Response
 ): Promise<void> => {
     try {
-        // const { username, password, geolocation } = req.body;
         const { username, password } = req.body;
-
-        console.log(username, password);
 
         const user = await User.findOne({ username });
 
-        console.log(user);
-        
         if (!user || !(await user.matchPassword(password))) {
             res.status(401).json({ message: 'Invalid credentials' });
+            return;
+        }
+
+        // Check if the user is verified
+        if (!user.verified) {
+            res.status(403).json({
+                message: 'Email not verified. Please check your email to verify your account.',
+            });
             return;
         }
 
@@ -149,21 +138,97 @@ export const login = async (
             { expiresIn: '1h' }
         );
 
-        console.log(token);
-        
-        // const weather = await fetchWeather(geolocation.coordinates[0], geolocation.coordinates[1]);
-
         res.json({
             token,
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
             },
-            // weather
         });
     } catch (error) {
+        console.error("Error during login:", error);
         res.status(500).json({ message: 'Error during login' });
+    }
+};
+
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
+    const { token } = req.query;
+
+    try {
+        const decoded = jwt.verify(token as string, config.jwtSecret) as { id: string };
+
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            res.status(404).send(`
+                <div style="text-align: center; font-family: Arial, sans-serif;">
+                    <h1>Email Verification Failed</h1>
+                    <p>User not found.</p>
+                    <a href="https://wardrobewizard.fashion" style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: purple;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                    ">Go to Login</a>
+                </div>
+            `);
+            return;
+        }
+
+        if (user.verified) {
+            res.status(400).send(`
+                <div style="text-align: center; font-family: Arial, sans-serif;">
+                    <h1>Email Already Verified</h1>
+                    <p>Your email has already been verified.</p>
+                    <a href="https://wardrobewizard.fashion" style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: purple;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                    ">Go to Login</a>
+                </div>
+            `);
+            return;
+        }
+
+        user.verified = true;
+        await user.save();
+
+        res.send(`
+            <div style="text-align: center; font-family: Arial, sans-serif;">
+                <h1>Email Verified Successfully</h1>
+                <p>Thank you for verifying your email. You can now log in.</p>
+                <a href="https://wardrobewizard.fashion" style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: purple;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                ">Go to Login</a>
+            </div>
+        `);
+    } catch (error) {
+        console.error("Error verifying email:", error);
+        res.status(400).send(`
+            <div style="text-align: center; font-family: Arial, sans-serif;">
+                <h1>Email Verification Failed</h1>
+                <p>The verification link is invalid or has expired.</p>
+                <a href="https://wardrobewizard.fashion" style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: purple;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                ">Go to Login</a>
+            </div>
+        `);
     }
 };
 
@@ -182,3 +247,4 @@ export const getProfile = async (
         res.status(500).json({ message: 'Error fetching profile' });
     }
 };
+
