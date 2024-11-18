@@ -14,8 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
-const API_ROOT = "http://localhost:3000/api"; // local
-// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
@@ -118,6 +118,9 @@ function LoginPage() {
       });
 
       if (response.status === 201 || response.status === 200) {
+        response.json().then((data) => {
+          window.localStorage.setItem("token", data.token);
+        })
         navigate("/closet");
         console.log("User logged in successfully.");
       } else {

@@ -12,7 +12,7 @@ import {
 
 // Define prop types
 interface CarouselComponentProps {
-  items: { id: string; image_url: string }[];
+  items: { id: string; imagePath: string }[];
   selectedItemId?: string;
   title?: string;
 }
@@ -72,7 +72,7 @@ export default function CarouselComponent({
               >
                 <CardContent className="h-24 flex items-center justify-center">
                   <img
-                    src={item.image_url}
+                    src={item.imagePath}
                     alt={`Item ${item.id}`}
                     width={150}
                     height={150}

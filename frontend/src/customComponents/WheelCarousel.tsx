@@ -4,7 +4,7 @@ import CarouselComponent from "./CarouselComponent";
 // Define item structure
 interface Item {
   id: string;
-  image_url: string;
+  imagePath: string;
 }
 
 // Define props structure
