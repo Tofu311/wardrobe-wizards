@@ -66,11 +66,16 @@ export default function CarouselComponent({
       >
         <CarouselContent>
           {items.map((item, index) => (
-            <CarouselItem key={item.id} className="basis-1/5">
+            <CarouselItem
+              key={item.id}
+              className="basis-1/5 md:basis-1/5 lg:basis-1/5"
+            >
               <Card
-                className={`${selectedIndex === index ? "bg-[#FFF9DF]" : ""}`}
+                className={`${
+                  selectedIndex === index ? "bg-[#FFF9DF]" : ""
+                } w-full aspect-square`}
               >
-                <CardContent className="h-24 flex items-center justify-center">
+                <CardContent className="p-0 h-full flex items-center justify-center overflow-hidden">
                   <img
                     src={item.imagePath}
                     alt={`Item ${item.id}`}
