@@ -155,7 +155,6 @@ export default function UserCloset() {
 
   const handleReclassify = async (clothingId: string, newType: string) => {
     try {
-      // LOCAL DEVELOPMENT URL: Change to prod later
       const response = await fetch(
         `${API_ROOT}/clothing/${clothingId}/reclassify`,
         {
@@ -197,7 +196,13 @@ export default function UserCloset() {
             Wardrobe Wizard
           </h1>
           <div className="flex space-x-4">
-            <Button>Generate Outfit</Button>
+            <Button
+              onClick={() => {
+                navigate("/outfits");
+              }}
+            >
+              Generate Outfit
+            </Button>
             <Button>My Account</Button>
             <Button
               onClick={() => {
