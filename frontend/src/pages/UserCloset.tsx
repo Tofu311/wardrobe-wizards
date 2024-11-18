@@ -203,7 +203,13 @@ export default function UserCloset() {
             >
               Generate Outfit
             </Button>
-            <Button>My Account</Button>
+            <Button
+              onClick={() => {
+                navigate("/account");
+              }}
+            >
+              My Account
+            </Button>
             <Button
               onClick={() => {
                 localStorage.removeItem("token");
