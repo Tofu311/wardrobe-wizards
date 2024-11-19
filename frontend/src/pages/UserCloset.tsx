@@ -40,7 +40,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { PlusCircle } from "lucide-react";
-import { ClothingItem } from "../types/types";
+import { ClothingItem } from "@/types/types";
 import { useNavigate } from "react-router-dom";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
@@ -49,6 +49,7 @@ const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 const CLOTHING_TYPES = ["HEADWEAR", "TOP", "OUTERWEAR", "BOTTOM", "FOOTWEAR"];
 
 // DEVELOPMENT ONLY
+/*
 const mockClothes: ClothingItem[] = [
   {
     _id: "648b8bba3e2e456d6f5a8c2e",
@@ -67,10 +68,11 @@ const mockClothes: ClothingItem[] = [
     temperature: "Cold",
   },
 ];
+*/
 
 export default function UserCloset() {
   const [filter, setFilter] = useState<string[]>(["all"]);
-  const [clothes, setClothes] = useState<ClothingItem[]>(mockClothes);
+  const [clothes, setClothes] = useState<ClothingItem[]>([]);
   const [activeTab, setActiveTab] = useState("closet");
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

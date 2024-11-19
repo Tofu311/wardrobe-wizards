@@ -1,19 +1,21 @@
 // WheelCarousel.tsx
 import CarouselComponent from "./CarouselComponent";
+import { ClothingItem } from "@/types/types";
 
 // Define item structure
+/*
 interface Item {
   id: string;
   imagePath: string;
-}
+}*/
 
 // Define props structure
 interface WheelCarouselProps {
-  headwear: Item[];
-  top: Item[];
-  outerwear: Item[];
-  bottom: Item[];
-  footwear: Item[];
+  headwear: ClothingItem[];
+  top: ClothingItem[];
+  outerwear: ClothingItem[];
+  bottom: ClothingItem[];
+  footwear: ClothingItem[];
   selectedItems?: {
     headwear?: string;
     top?: string;
