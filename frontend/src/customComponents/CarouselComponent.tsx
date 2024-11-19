@@ -12,7 +12,7 @@ import {
 
 // Define prop types
 interface CarouselComponentProps {
-  items: { id: string; imagePath: string }[];
+  items: { _id: string; imagePath: string }[];
   selectedItemId?: string;
   title?: string;
 }
@@ -32,7 +32,7 @@ export default function CarouselComponent({
 
   const placeholderItems = (count: number) =>
     Array.from({ length: count }, (_, i) => ({
-      id: `placeholder-${i}`,
+      _id: `placeholder-${i}`,
       imagePath: "",
     }));
 
@@ -65,7 +65,7 @@ export default function CarouselComponent({
   React.useEffect(() => {
     if (!api || selectedItemId === undefined || selectedItemId === null) return;
 
-    const index = items.findIndex((item) => item.id === selectedItemId);
+    const index = items.findIndex((item) => item._id === selectedItemId);
 
     if (index !== -1) {
       api.scrollTo(index);
@@ -85,7 +85,7 @@ export default function CarouselComponent({
         <CarouselContent>
           {displayItems.map((item, index) => (
             <CarouselItem
-              key={item.id}
+              key={item._id}
               className="basis-1/5 md:basis-1/5 lg:basis-1/5"
             >
               <div className="p-1">
@@ -99,7 +99,7 @@ export default function CarouselComponent({
                       <div className="relative w-full h-full">
                         <img
                           src={item.imagePath}
-                          alt={`Item ${item.id}`}
+                          alt={`Item ${item._id}`}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
                       </div>
