@@ -24,9 +24,6 @@ interface RegisterRequestBody {
 interface LoginRequestBody {
     username: string;
     password: string;
-    geolocation: {
-        coordinates: number[];
-    };
 }
 
 export const fetchWeather = async (latitude: number, longitude: number): Promise<WeatherData> => {
@@ -101,8 +98,9 @@ export const register = async (
         // Send verification email
         await sendVerificationEmail(email, verificationLink);
 
+        // Respond with a message instead of signing in the user
         res.status(201).json({
-            message: "User registered successfully. Please check your email to verify your account.",
+            message: "Account created successfully. Please check your email to verify your account.",
         });
     } catch (error) {
         console.error("Error in registration:", error);
@@ -248,3 +246,21 @@ export const getProfile = async (
     }
 };
 
+// Delete User Function
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { username } = req.body;
+
+        const user = await User.findOneAndDelete({ username });
+
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ message: "Error occurred during deletion" });
+    }
+};
