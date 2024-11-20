@@ -114,3 +114,22 @@ export const sendEmailRecoveryNotification = async (email: string, username: str
 
     await sendEmail(email, subject, html);
 };
+
+/**
+ * Sends a password reset success email to the user.
+ * 
+ * @param email - The recipient's email address.
+ */
+export const sendPasswordResetSuccessEmail = async (email: string): Promise<void> => {
+    const subject = 'Password Reset Successful';
+    const html = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2>Password Reset Successful</h2>
+            <p>Your password has been successfully reset.</p>
+            <p>If you did not request this change, please contact our support team immediately.</p>
+            <p>Thanks,<br>The Wardrobe Wizards Team</p>
+        </div>
+    `;
+
+    await sendEmail(email, subject, html);
+};
