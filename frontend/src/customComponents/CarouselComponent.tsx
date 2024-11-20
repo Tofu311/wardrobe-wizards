@@ -24,6 +24,20 @@ export default function CarouselComponent({
   const [api, setApi] = React.useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
 
+  const MIN_ITEMS = 5;
+
+  // Create duplicate item array to fill carousel
+  const displayItems = React.useMemo(() => {
+    if (items.length === 0) return [];
+    if (items.length >= MIN_ITEMS) return items;
+
+    // Calculate how many times we need to repeat the items
+    const repetitions = Math.ceil(MIN_ITEMS / items.length);
+    return Array.from({ length: repetitions }, () =>
+      items.map((item, idx) => ({ ...item, id: `${item.id}-${idx}` }))
+    ).flat();
+  }, [items]);
+
   // Initialize the carousel and set up the selected index listener
   React.useEffect(() => {
     if (!api) return;
@@ -36,10 +50,12 @@ export default function CarouselComponent({
     setSelectedIndex(api.selectedScrollSnap());
 
     api.on("select", onSelect);
+    api.on("settle", onSelect);
 
     // Cleanup event listener on unmount
     return () => {
       api.off("select", onSelect);
+      api.off("settle", onSelect);
     };
   }, [api]);
 
@@ -47,12 +63,12 @@ export default function CarouselComponent({
   React.useEffect(() => {
     if (!api || selectedItemId === undefined || selectedItemId === null) return;
 
-    const index = items.findIndex((item) => item.id === selectedItemId);
+    const index = displayItems.findIndex((item) => item.id === selectedItemId);
 
     if (index !== -1) {
       api.scrollTo(index);
     }
-  }, [api, selectedItemId, items]);
+  }, [api, selectedItemId, displayItems]);
 
   return (
     <div className="mb-8">
@@ -61,14 +77,17 @@ export default function CarouselComponent({
         opts={{
           align: "center",
           loop: true,
+          skipSnaps: true,
         }}
         className="w-full"
       >
         <CarouselContent>
-          {items.map((item, index) => (
-            <CarouselItem key={item.id} className="basis-1/5">
+          {displayItems.map((item, index) => (
+            <CarouselItem key={`${item.id}-${index}`} className="basis-1/5">
               <Card
-                className={`${selectedIndex === index ? "bg-[#FFF9DF]" : ""}`}
+                className={`${
+                  selectedIndex === index ? "bg-[#FFF9DF]" : ""
+                } transition-colors`}
               >
                 <CardContent className="h-24 flex items-center justify-center">
                   <img

@@ -10,8 +10,8 @@ interface Item {
 // Define props structure
 interface WheelCarouselProps {
   headwear: Item[];
-  top: Item[];
   outerwear: Item[];
+  top: Item[];
   bottom: Item[];
   footwear: Item[];
   selectedItems?: {
@@ -25,8 +25,8 @@ interface WheelCarouselProps {
 
 export default function WheelCarousel({
   headwear,
-  top,
   outerwear,
+  top,
   bottom,
   footwear,
   selectedItems = {}, // Default to an empty object if not provided
@@ -45,14 +45,30 @@ export default function WheelCarousel({
 
   return (
     <div>
-      <CarouselComponent items={headwear} selectedItemId={selected.headwear} />
-      <CarouselComponent items={top} selectedItemId={selected.top} />
-      <CarouselComponent
-        items={outerwear}
-        selectedItemId={selected.outerwear}
-      />
-      <CarouselComponent items={bottom} selectedItemId={selected.bottom} />
-      <CarouselComponent items={footwear} selectedItemId={selected.footwear} />
+      {headwear.length > 0 && (
+        <CarouselComponent
+          items={headwear}
+          selectedItemId={selected.headwear}
+        />
+      )}
+      {outerwear.length > 0 && (
+        <CarouselComponent
+          items={outerwear}
+          selectedItemId={selected.outerwear}
+        />
+      )}
+      {top.length > 0 && (
+        <CarouselComponent items={top} selectedItemId={selected.top} />
+      )}
+      {bottom.length > 0 && (
+        <CarouselComponent items={bottom} selectedItemId={selected.bottom} />
+      )}
+      {footwear.length > 0 && (
+        <CarouselComponent
+          items={footwear}
+          selectedItemId={selected.footwear}
+        />
+      )}
     </div>
   );
 }

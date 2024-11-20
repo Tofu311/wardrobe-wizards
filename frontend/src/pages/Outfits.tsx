@@ -10,8 +10,8 @@ export default function Outfits() {
   // Sample selectedItems with string IDs
   const selectedItems = {
     headwear: "3",
-    top: "5",
     outerwear: "7",
+    top: "5",
     bottom: "2",
     footwear: "8",
   };
@@ -108,8 +108,8 @@ export default function Outfits() {
         <div className="w-5/6 ml-16">
           <WheelCarousel
             headwear={headwears}
-            top={tops}
             outerwear={outerwears}
+            top={tops}
             bottom={bottoms}
             footwear={footwears}
             selectedItems={[]}
