@@ -2,107 +2,59 @@ import { useEffect, useState } from "react";
 import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ClothingItem } from "@/types/types";
 
-// const API_ROOT = "http://localhost:3000/api"; // local
-const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+const API_ROOT = "http://localhost:3000/api"; // local
+// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 export default function Outfits() {
   // Sample selectedItems with string IDs
-  /*
   const selectedItems = {
     headwear: "3",
     top: "5",
     outerwear: "7",
     bottom: "2",
     footwear: "8",
-  };*/
-
-  const [headwear, setHeadwear] = useState<ClothingItem[]>([]);
-  const [top, setTop] = useState<ClothingItem[]>([]);
-  const [outerwear, setOuterwear] = useState<ClothingItem[]>([]);
-  const [bottom, setBottom] = useState<ClothingItem[]>([]);
-  const [footwear, setFootwear] = useState<ClothingItem[]>([]);
-  const [selectedItems, setSelectedItems] = useState<{
-    headwear?: string;
-    top?: string;
-    outerwear?: string;
-    bottom?: string;
-    footwear?: string;
-  }>({});
-
-  const fetchClothingByType = async (type: string) => {
-    try {
-      const response = await fetch(
-        `${API_ROOT}/clothing?clothingType=${type}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch clothing type: ${type}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(`Error fetching ${type}:`, error);
-      return [];
-    }
   };
 
-  const fetchAllClothing = async () => {
-    const headwearData = await fetchClothingByType("HEADWEAR");
-    const outerwearData = await fetchClothingByType("OUTERWEAR");
-    const topData = await fetchClothingByType("TOP");
-    const bottomData = await fetchClothingByType("BOTTOM");
-    const footwearData = await fetchClothingByType("FOOTWEAR");
+  const [headwears, setHeadwears] = useState([]);
+  const [outerwears, setOuterwears] = useState([]);
+  const [tops, setTops] = useState([]);
+  const [bottoms, setBottoms] = useState([]);
+  const [footwears, setFootwears] = useState([]);
 
-    setHeadwear(headwearData);
-    setOuterwear(outerwearData);
-    setTop(topData);
-    setBottom(bottomData);
-    setFootwear(footwearData);
-  };
-
-  /*
   useEffect(() => {
     const token = window.localStorage.getItem("token");
 
     Promise.all([
-      fetch("https://api.wardrobewizard.fashion/api/clothing?type=HEADWEAR", {
+      fetch(`${API_ROOT}/clothing?clothingType=HEADWEAR`, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + token,
         },
       }).then((response) => response.json()),
 
-      fetch("https://api.wardrobewizard.fashion/api/clothing?type=OUTERWEAR", {
+      fetch(`${API_ROOT}/clothing?clothingType=OUTERWEAR`, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + token,
         },
       }).then((response) => response.json()),
 
-      fetch("https://api.wardrobewizard.fashion/api/clothing?type=TOP", {
+      fetch(`${API_ROOT}/clothing?clothingType=TOP`, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + token,
         },
       }).then((response) => response.json()),
 
-      fetch("https://api.wardrobewizard.fashion/api/clothing?type=BOTTOM", {
+      fetch(`${API_ROOT}/clothing?clothingType=BOTTOM`, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + token,
         },
       }).then((response) => response.json()),
 
-      fetch("https://api.wardrobewizard.fashion/api/clothing?type=FOOTWEAR", {
+      fetch(`${API_ROOT}/clothing?clothingType=FOOTWEAR`, {
         method: "GET",
         headers: {
           Authorization: "Bearer " + token,
@@ -127,10 +79,6 @@ export default function Outfits() {
       .catch((error) => {
         console.error("Error fetching data:", error);
       });
-  }, []);*/
-
-  useEffect(() => {
-    fetchAllClothing();
   }, []);
 
   return (
@@ -159,12 +107,12 @@ export default function Outfits() {
 
         <div className="w-5/6 ml-16">
           <WheelCarousel
-            headwear={headwear}
-            top={top}
-            outerwear={outerwear}
-            bottom={bottom}
-            footwear={footwear}
-            selectedItems={selectedItems}
+            headwear={headwears}
+            top={tops}
+            outerwear={outerwears}
+            bottom={bottoms}
+            footwear={footwears}
+            selectedItems={[]}
           />
         </div>
       </div>
