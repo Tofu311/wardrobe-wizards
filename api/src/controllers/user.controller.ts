@@ -178,10 +178,16 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 };
 
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { token, newPassword } = req.body;
+    const { token } = req.query;
+    const { newPassword } = req.body;
 
-        const decoded = jwt.verify(token, config.jwtSecret) as { id: string };
+    try {
+        if (!token) {
+            res.status(400).json({ message: "Token is required" });
+            return;
+        }
+
+        const decoded = jwt.verify(token as string, config.jwtSecret) as { id: string };
 
         const user = await User.findById(decoded.id);
 
@@ -190,16 +196,27 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        await user.save();
+        if (req.method === "GET") {
+            res.status(200).send(`
+                <form method="POST" action="/api/users/reset-password?token=${token}">
+                    <label for="newPassword">Enter New Password:</label>
+                    <input type="password" id="newPassword" name="newPassword" required />
+                    <button type="submit">Reset Password</button>
+                </form>
+            `);
+        } else if (req.method === "POST") {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            user.password = hashedPassword;
+            await user.save();
 
-        res.status(200).json({ message: "Password reset successfully. You can now log in." });
+            res.status(200).json({ message: "Password reset successfully" });
+        }
     } catch (error) {
-        console.error("Error resetting password:", error);
-        res.status(400).json({ message: "Invalid or expired token." });
+        console.error("Error during password reset:", error);
+        res.status(400).json({ message: "Invalid or expired token" });
     }
 };
+
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
     const { token } = req.query;
