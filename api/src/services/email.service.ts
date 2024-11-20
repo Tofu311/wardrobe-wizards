@@ -93,3 +93,24 @@ export const sendPasswordRecoveryEmail = async (email: string, resetLink: string
 
     await sendEmail(email, subject, html);
 };
+
+/**
+ * Sends an email recovery notification to the user.
+ * 
+ * @param email - The recipient's email address.
+ * @param username - The user's username.
+ */
+export const sendEmailRecoveryNotification = async (email: string, username: string): Promise<void> => {
+    const subject = 'Email Recovery';
+    const html = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2>Email Recovery Request</h2>
+            <p>Hello ${username},</p>
+            <p>We received a request to recover the email associated with your account. Your email is: <strong>${email}</strong>.</p>
+            <p>If you did not request this, please ignore this email.</p>
+            <p>Thanks,<br>The Wardrobe Wizards Team</p>
+        </div>
+    `;
+
+    await sendEmail(email, subject, html);
+};
