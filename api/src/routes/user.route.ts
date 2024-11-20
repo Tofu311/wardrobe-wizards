@@ -9,8 +9,12 @@ router.post('/login', login);
 router.get('/profile', verifyToken, getProfile);
 router.get('/verify-email', verifyEmail);
 router.delete('/delete', deleteUser);
-router.post('/recover-email', recoverEmail); 
-router.post('/forgot-password', forgotPassword); 
-router.post('/reset-password', resetPassword);
+router.post('/recover-email', recoverEmail);
+router.post('/forgot-password', forgotPassword);
+
+
+router.route('/reset-password')
+    .get(resetPassword) 
+    .post(resetPassword); 
 
 export default router;
