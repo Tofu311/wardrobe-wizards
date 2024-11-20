@@ -147,6 +147,60 @@ export const login = async (
     }
 };
 
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        const resetToken = jwt.sign(
+            { id: user._id },
+            config.jwtSecret,
+            { expiresIn: '1h' }
+        );
+
+        const resetLink = `https://wardrobewizard.fashion/reset-password?token=${resetToken}`;
+
+        await sendPasswordRecoveryEmail(email, resetLink);
+
+        res.status(200).json({
+            message: "Password recovery email sent. Please check your email.",
+        });
+    } catch (error) {
+        console.error("Error during forgot password:", error);
+        res.status(500).json({ message: "Error occurred during password recovery." });
+    }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { token, newPassword } = req.body;
+
+        const decoded = jwt.verify(token, config.jwtSecret) as { id: string };
+
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successfully. You can now log in." });
+    } catch (error) {
+        console.error("Error resetting password:", error);
+        res.status(400).json({ message: "Invalid or expired token." });
+    }
+};
+
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
     const { token } = req.query;
 
@@ -160,7 +214,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
                 <div style="text-align: center; font-family: Arial, sans-serif;">
                     <h1>Email Verification Failed</h1>
                     <p>User not found.</p>
-                    <a href="https://wardrobewizard.fashion" style="
+                    <a href="https://wardrobewizard.fashion/login" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: purple;
@@ -179,7 +233,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
                 <div style="text-align: center; font-family: Arial, sans-serif;">
                     <h1>Email Already Verified</h1>
                     <p>Your email has already been verified.</p>
-                    <a href="https://wardrobewizard.fashion" style="
+                    <a href="https://wardrobewizard.fashion/login" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: purple;
@@ -200,7 +254,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
             <div style="text-align: center; font-family: Arial, sans-serif;">
                 <h1>Email Verified Successfully</h1>
                 <p>Thank you for verifying your email. You can now log in.</p>
-                <a href="https://wardrobewizard.fashion" style="
+                <a href="https://wardrobewizard.fashion/login" style="
                     display: inline-block;
                     padding: 10px 20px;
                     background-color: purple;
@@ -217,7 +271,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
             <div style="text-align: center; font-family: Arial, sans-serif;">
                 <h1>Email Verification Failed</h1>
                 <p>The verification link is invalid or has expired.</p>
-                <a href="https://wardrobewizard.fashion" style="
+                <a href="https://wardrobewizard.fashion/login" style="
                     display: inline-block;
                     padding: 10px 20px;
                     background-color: purple;
@@ -283,35 +337,5 @@ export const recoverEmail = async (req: Request, res: Response): Promise<void> =
     } catch (error) {
         console.error("Error during email recovery:", error);
         res.status(500).json({ message: "Error occurred during email recovery." });
-    }
-};
-
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email } = req.body;
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            res.status(404).json({ message: "User not found" });
-            return;
-        }
-
-        const resetToken = jwt.sign(
-            { id: user._id },
-            config.jwtSecret,
-            { expiresIn: '1h' }
-        );
-
-        const resetLink = `https://wardrobewizard.fashion/reset-password?token=${resetToken}`;
-
-        await sendPasswordRecoveryEmail(email, resetLink);
-
-        res.status(200).json({
-            message: "Password recovery email sent. Please check your email.",
-        });
-    } catch (error) {
-        console.error("Error during forgot password:", error);
-        res.status(500).json({ message: "Error occurred during password recovery." });
     }
 };
