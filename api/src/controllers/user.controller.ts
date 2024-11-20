@@ -157,14 +157,38 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
         if (!user) {
             res.status(404).send(`
-                <div>Email Verification Failed</div>
+                <div style="text-align: center; font-family: Arial, sans-serif;">
+                    <h1>Email Verification Failed</h1>
+                    <p>User not found.</p>
+                    <a href="https://wardrobewizard.fashion" style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: purple;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                    ">Go to Login</a>
+                </div>
             `);
             return;
         }
 
         if (user.verified) {
             res.status(400).send(`
-                <div>Email Already Verified</div>
+                <div style="text-align: center; font-family: Arial, sans-serif;">
+                    <h1>Email Already Verified</h1>
+                    <p>Your email has already been verified.</p>
+                    <a href="https://wardrobewizard.fashion" style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: purple;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                    ">Go to Login</a>
+                </div>
             `);
             return;
         }
@@ -173,12 +197,36 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
         await user.save();
 
         res.send(`
-            <div>Email Verified Successfully</div>
+            <div style="text-align: center; font-family: Arial, sans-serif;">
+                <h1>Email Verified Successfully</h1>
+                <p>Thank you for verifying your email. You can now log in.</p>
+                <a href="https://wardrobewizard.fashion" style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: purple;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                ">Go to Login</a>
+            </div>
         `);
     } catch (error) {
         console.error("Error verifying email:", error);
         res.status(400).send(`
-            <div>Email Verification Failed</div>
+            <div style="text-align: center; font-family: Arial, sans-serif;">
+                <h1>Email Verification Failed</h1>
+                <p>The verification link is invalid or has expired.</p>
+                <a href="https://wardrobewizard.fashion" style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: purple;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                ">Go to Login</a>
+            </div>
         `);
     }
 };
