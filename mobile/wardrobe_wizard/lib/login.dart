@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wardrobe_wizard/closet.dart';
-import 'package:wardrobe_wizard/login_and_signup/pwdreset.dart';
-import 'package:wardrobe_wizard/login_and_signup/register.dart';
+import 'package:wardrobe_wizard/home.dart';
+import 'package:wardrobe_wizard/pwdreset.dart';
+import 'package:wardrobe_wizard/register.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key, required this.title});
@@ -119,7 +120,7 @@ class _LoginPageState extends State<Login> {
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return const Closet(title: 'My Closet');
+                            return const HomeScreen();
                           },
                         ),
                       );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wardrobe_wizard/login_and_signup/login.dart';
+import 'package:wardrobe_wizard/login.dart';
 
 void main() {
   runApp(const MyApp());

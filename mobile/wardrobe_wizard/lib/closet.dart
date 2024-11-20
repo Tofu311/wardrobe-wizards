@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wardrobe_wizard/clothing.dart';
-import 'package:wardrobe_wizard/login_and_signup/login.dart';
+import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {
   const Closet({super.key, required this.title});
@@ -77,6 +77,8 @@ class _ClosetState extends State<Closet> {
 
     if (source != null) {
       final XFile? image = await _picker.pickImage(source: source);
+      //upload image to server
+
       if (image != null) {
         setState(() {
           images.add(image);
