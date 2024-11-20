@@ -6,7 +6,7 @@ import { config } from '../config';
 import { AuthRequest } from '../types';
 import { WeatherData } from '../types';
 import axios from 'axios';
-import { sendVerificationEmail } from '../services/email.service';
+import { sendVerificationEmail, sendPasswordRecoveryEmail } from '../services/email.service';
 
 interface RegisterRequestBody {
     name: {
@@ -78,7 +78,6 @@ export const register = async (
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user with `verified: false`
         const user = await User.create({
             name,
             username,
@@ -88,20 +87,16 @@ export const register = async (
             verified: false,
         });
 
-        // Generate a verification token
         const verificationToken = jwt.sign(
             { id: user._id },
             config.jwtSecret,
             { expiresIn: '1h' }
         );
 
-        // Generate the verification link
         const verificationLink = `https://wardrobewizard.fashion/verify-email?token=${verificationToken}`;
 
-        // Send verification email
         await sendVerificationEmail(email, verificationLink);
 
-        // Respond with a message instead of signing in the user
         res.status(201).json({
             message: "Account created successfully. Please check your email to verify your account.",
         });
@@ -125,7 +120,6 @@ export const login = async (
             return;
         }
 
-        // Check if the user is verified
         if (!user.verified) {
             res.status(403).json({
                 message: 'Email not verified. Please check your email to verify your account.',
@@ -163,36 +157,14 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
         if (!user) {
             res.status(404).send(`
-                <div style="text-align: center; font-family: Arial, sans-serif;">
-                    <h1>Email Verification Failed</h1>
-                    <p>User not found.</p>
-                    <a href="https://wardrobewizard.fashion" style="
-                        display: inline-block;
-                        padding: 10px 20px;
-                        background-color: purple;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                    ">Go to Login</a>
-                </div>
+                <div>Email Verification Failed</div>
             `);
             return;
         }
 
         if (user.verified) {
             res.status(400).send(`
-                <div style="text-align: center; font-family: Arial, sans-serif;">
-                    <h1>Email Already Verified</h1>
-                    <p>Your email has already been verified.</p>
-                    <a href="https://wardrobewizard.fashion" style="
-                        display: inline-block;
-                        padding: 10px 20px;
-                        background-color: purple;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                    ">Go to Login</a>
-                </div>
+                <div>Email Already Verified</div>
             `);
             return;
         }
@@ -201,34 +173,12 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
         await user.save();
 
         res.send(`
-            <div style="text-align: center; font-family: Arial, sans-serif;">
-                <h1>Email Verified Successfully</h1>
-                <p>Thank you for verifying your email. You can now log in.</p>
-                <a href="https://wardrobewizard.fashion" style="
-                    display: inline-block;
-                    padding: 10px 20px;
-                    background-color: purple;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                ">Go to Login</a>
-            </div>
+            <div>Email Verified Successfully</div>
         `);
     } catch (error) {
         console.error("Error verifying email:", error);
         res.status(400).send(`
-            <div style="text-align: center; font-family: Arial, sans-serif;">
-                <h1>Email Verification Failed</h1>
-                <p>The verification link is invalid or has expired.</p>
-                <a href="https://wardrobewizard.fashion" style="
-                    display: inline-block;
-                    padding: 10px 20px;
-                    background-color: purple;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                ">Go to Login</a>
-            </div>
+            <div>Email Verification Failed</div>
         `);
     }
 };
@@ -249,7 +199,6 @@ export const getProfile = async (
     }
 };
 
-// Delete User Function
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const { username } = req.body;
@@ -268,7 +217,6 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-// Recover Email Function
 export const recoverEmail = async (req: Request, res: Response): Promise<void> => {
     try {
         const { username } = req.body;
@@ -287,5 +235,35 @@ export const recoverEmail = async (req: Request, res: Response): Promise<void> =
     } catch (error) {
         console.error("Error during email recovery:", error);
         res.status(500).json({ message: "Error occurred during email recovery." });
+    }
+};
+
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        const resetToken = jwt.sign(
+            { id: user._id },
+            config.jwtSecret,
+            { expiresIn: '1h' }
+        );
+
+        const resetLink = `https://wardrobewizard.fashion/reset-password?token=${resetToken}`;
+
+        await sendPasswordRecoveryEmail(email, resetLink);
+
+        res.status(200).json({
+            message: "Password recovery email sent. Please check your email.",
+        });
+    } catch (error) {
+        console.error("Error during forgot password:", error);
+        res.status(500).json({ message: "Error occurred during password recovery." });
     }
 };
