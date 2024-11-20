@@ -24,6 +24,9 @@ interface RegisterRequestBody {
 interface LoginRequestBody {
     username: string;
     password: string;
+    geolocation: {
+        coordinates: number[];
+    };
 }
 
 export const fetchWeather = async (latitude: number, longitude: number): Promise<WeatherData> => {
@@ -262,5 +265,27 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     } catch (error) {
         console.error("Error deleting user:", error);
         res.status(500).json({ message: "Error occurred during deletion" });
+    }
+};
+
+// Recover Email Function
+export const recoverEmail = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { username } = req.body;
+
+        const user = await User.findOne({ username });
+
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        res.status(200).json({
+            message: "Email associated with the account retrieved successfully.",
+            email: user.email,
+        });
+    } catch (error) {
+        console.error("Error during email recovery:", error);
+        res.status(500).json({ message: "Error occurred during email recovery." });
     }
 };
