@@ -1,54 +1,22 @@
 import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:wardrobe_wizard/clothing.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image/image.dart' as img;
 import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {
-  const Closet({super.key, required this.title});
   final String title;
 
+  const Closet({super.key, required this.title});
+
   @override
-  State<Closet> createState() => _ClosetState();
+  _ClosetState createState() => _ClosetState();
 }
 
 class _ClosetState extends State<Closet> {
-  String dropdownValue = 'Sort By';
-  List<Clothing> testCloset = [
-    Clothing(
-      name: 'T-shirt',
-      size: 'XL',
-      color: 'White',
-      type: 'Top',
-      style: 'Casual',
-      image: const AssetImage('assets/tshirt.avif'),
-    ),
-    Clothing(
-      name: 'Jeans',
-      size: '32x34',
-      color: 'Blue',
-      type: 'Bottom',
-      style: 'Casual',
-      image: const AssetImage('assets/jeans.png'),
-    ),
-    Clothing(
-      name: 'Sneakers',
-      size: '12',
-      color: 'Black',
-      type: 'Shoes',
-      style: 'Casual',
-      image: const AssetImage('assets/vans.png'),
-    ),
-    Clothing(
-      name: 'Hoodie',
-      size: 'XL',
-      color: 'Black',
-      type: 'Jacket',
-      style: 'Casual',
-      image: const AssetImage('assets/hoodie.png'),
-    ),
-  ];
   final ImagePicker _picker = ImagePicker();
   final List<XFile> images = [];
 
@@ -77,37 +45,80 @@ class _ClosetState extends State<Closet> {
 
     if (source != null) {
       final XFile? image = await _picker.pickImage(source: source);
-      //upload image to server
-
       if (image != null) {
-        setState(() {
-          images.add(image);
-        });
+        // Compress the image
+        File file = File(image.path);
+        Uint8List imageBytes = await file.readAsBytes();
+        img.Image? originalImage = img.decodeImage(imageBytes);
+        img.Image resizedImage =
+            img.copyResize(originalImage!, width: 800); // Resize to 800px width
+        Uint8List compressedBytes = Uint8List.fromList(img
+            .encodeJpg(resizedImage, quality: 85)); // Compress with 85% quality
+
+        // Create a temporary file to store the compressed image
+        File compressedFile = await File('${file.path}_compressed.jpg')
+            .writeAsBytes(compressedBytes);
+
+        Map<String, String> headersList = {
+          "Authorization":
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MmQyNzkzZDBjMDg2Y2QyMjU3NGM1NSIsInVzZXJuYW1lIjoibWFya2I5IiwiaWF0IjoxNzMxNDQ1OTc3LCJleHAiOjE3MzE0NDk1Nzd9.P-RVTgTJrk-GeVgPrb4G8J6bnKjlwXGDO5mLjSETndg"
+        };
+
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse("https://api.wardrobewizard.fashion/api/clothing"),
+        );
+
+        request.headers.addAll(headersList);
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image',
+            compressedFile.path,
+            contentType: MediaType('image', 'jpeg'),
+          ),
+        );
+
+        var response = await request.send();
+        if (response.statusCode == 200) {
+          setState(() {
+            images.add(image);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image uploaded successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${response.reasonPhrase}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
 
-  //TODO: Implement sorting by type
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             color: Colors.red,
             onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const Login(title: 'Wardrobe Wizard'),
-                ),
-              );
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) {
+                return const Login(title: 'Wardrobe Wizard');
+              }));
             },
           ),
         ],
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
       ),
       body: Center(
         child: Column(
@@ -120,12 +131,8 @@ class _ClosetState extends State<Closet> {
             Padding(
               padding: const EdgeInsets.all(12),
               child: DropdownButton<String>(
-                value: dropdownValue,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    dropdownValue = newValue!;
-                  });
-                },
+                value: 'Sort By',
+                onChanged: (String? newValue) {},
                 items: <String>[
                   'Sort By',
                   'Tops',
@@ -140,71 +147,6 @@ class _ClosetState extends State<Closet> {
                 }).toList(),
               ),
             ),
-            //Sample data GridView
-            /*
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                ),
-                itemCount: testCloset.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(testCloset[index].name),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Image(
-                                    image: testCloset[index].image,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Text('Size: ${testCloset[index].size}'),
-                                Text('Color: ${testCloset[index].color}'),
-                                Text('Style: ${testCloset[index].style}'),
-                                Text('Type: ${testCloset[index].type}'),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Image(
-                              image: testCloset[index].image,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(testCloset[index].name),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            */
             Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
