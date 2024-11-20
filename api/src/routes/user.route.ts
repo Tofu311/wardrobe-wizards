@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getProfile, verifyEmail, deleteUser, recoverEmail, forgotPassword } from '../controllers/user.controller';
+import { register, login, getProfile, verifyEmail, deleteUser, recoverEmail, forgotPassword, resetPassword } from '../controllers/user.controller';
 import { verifyToken } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -11,5 +11,6 @@ router.get('/verify-email', verifyEmail);
 router.delete('/delete', deleteUser);
 router.post('/recover-email', recoverEmail); 
 router.post('/forgot-password', forgotPassword); 
+router.post('/reset-password', resetPassword);
 
 export default router;
