@@ -525,7 +525,7 @@ export default function UserCloset() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-8">
           <div className="bg-[#313D5A] min-h-full rounded-lg">
             {activeTab === "closet" && (
               <>

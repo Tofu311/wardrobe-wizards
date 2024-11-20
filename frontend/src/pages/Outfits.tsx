@@ -3,8 +3,8 @@ import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const API_ROOT = "http://localhost:3000/api"; // local
-// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 export default function Outfits() {
   // Sample selectedItems with string IDs
