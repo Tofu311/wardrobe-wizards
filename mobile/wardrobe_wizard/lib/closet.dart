@@ -53,15 +53,39 @@ class _ClosetState extends State<Closet> {
   final List<XFile> images = [];
 
   Future<void> takePicture() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      setState(() {
-        images.add(image);
-      });
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Take a picture'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Select from photos'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source != null) {
+      final XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        setState(() {
+          images.add(image);
+        });
+      }
     }
   }
 
-  //TODO: Implement sorting by type and adding clothes
+  //TODO: Implement sorting by type
   @override
   Widget build(BuildContext context) {
     return Scaffold(
