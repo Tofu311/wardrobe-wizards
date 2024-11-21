@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
+interface ClothingMap {
+  [key: string]: string; // Map from item ID to clothing type
+}
+
 export default function Outfits() {
   const [prompt, setPrompt] = useState("");
   const [selectedItems, setSelectedItems] = useState({});
@@ -66,35 +70,35 @@ export default function Outfits() {
         ]) => {
           // Map _id to id and add clothingType to each item
           setHeadwears(
-            headwearsData.map((item) => ({
+            headwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "headwear",
             }))
           );
           setOuterwears(
-            outerwearsData.map((item) => ({
+            outerwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "outerwear",
             }))
           );
           setTops(
-            topsData.map((item) => ({
+            topsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "top",
             }))
           );
           setBottoms(
-            bottomsData.map((item) => ({
+            bottomsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "bottom",
             }))
           );
           setFootwears(
-            footwearsData.map((item) => ({
+            footwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "footwear",
@@ -142,16 +146,16 @@ export default function Outfits() {
       console.log("All clothing items:", allClothingItems);
 
       // Create a map from item ID to clothing type
-      const itemIdToClothingType = {};
-      allClothingItems.forEach((item) => {
+      const itemIdToClothingType: ClothingMap = {};
+      allClothingItems.forEach((item: { id: string; clothingType: string }) => {
         itemIdToClothingType[item.id] = item.clothingType;
       });
 
       console.log("Item ID to clothing type mapping:", itemIdToClothingType);
 
       // Build the selectedItems object based on the outfitItemIds
-      const newSelectedItems = {};
-      outfitItemIds.forEach((itemId) => {
+      const newSelectedItems: Record<string, string> = {};
+      outfitItemIds.forEach((itemId: string) => {
         const clothingType = itemIdToClothingType[itemId];
         console.log(
           `For itemId ${itemId}, found clothingType: ${clothingType}`
