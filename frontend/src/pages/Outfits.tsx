@@ -1,3 +1,4 @@
+// Outfits.tsx
 import { useEffect, useState } from "react";
 import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
@@ -7,21 +8,15 @@ import { Input } from "@/components/ui/input";
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 export default function Outfits() {
-  // Sample selectedItems with string IDs
-  const selectedItems = {
-    headwear: "3",
-    outerwear: "7",
-    top: "5",
-    bottom: "2",
-    footwear: "8",
-  };
-
+  const [prompt, setPrompt] = useState("");
+  const [selectedItems, setSelectedItems] = useState({});
   const [headwears, setHeadwears] = useState([]);
   const [outerwears, setOuterwears] = useState([]);
   const [tops, setTops] = useState([]);
   const [bottoms, setBottoms] = useState([]);
   const [footwears, setFootwears] = useState([]);
 
+  // Fetch clothing items and include the clothingType in each item
   useEffect(() => {
     const token = window.localStorage.getItem("token");
 
@@ -69,11 +64,42 @@ export default function Outfits() {
           bottomsData,
           footwearsData,
         ]) => {
-          setHeadwears(headwearsData);
-          setOuterwears(outerwearsData);
-          setTops(topsData);
-          setBottoms(bottomsData);
-          setFootwears(footwearsData);
+          // Map _id to id and add clothingType to each item
+          setHeadwears(
+            headwearsData.map((item) => ({
+              ...item,
+              id: item._id,
+              clothingType: "headwear",
+            }))
+          );
+          setOuterwears(
+            outerwearsData.map((item) => ({
+              ...item,
+              id: item._id,
+              clothingType: "outerwear",
+            }))
+          );
+          setTops(
+            topsData.map((item) => ({
+              ...item,
+              id: item._id,
+              clothingType: "top",
+            }))
+          );
+          setBottoms(
+            bottomsData.map((item) => ({
+              ...item,
+              id: item._id,
+              clothingType: "bottom",
+            }))
+          );
+          setFootwears(
+            footwearsData.map((item) => ({
+              ...item,
+              id: item._id,
+              clothingType: "footwear",
+            }))
+          );
         }
       )
       .catch((error) => {
@@ -81,13 +107,83 @@ export default function Outfits() {
       });
   }, []);
 
+  // Function to handle generating an outfit based on the prompt
+  const handleGenerateOutfit = async () => {
+    const token = window.localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${API_ROOT}/clothing/generateOutfit`, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const outfitItemIds = data.outfitItemIds;
+
+      console.log("Outfit item IDs:", outfitItemIds);
+
+      // Combine all clothing items into one array
+      const allClothingItems = [
+        ...headwears,
+        ...outerwears,
+        ...tops,
+        ...bottoms,
+        ...footwears,
+      ];
+
+      console.log("All clothing items:", allClothingItems);
+
+      // Create a map from item ID to clothing type
+      const itemIdToClothingType = {};
+      allClothingItems.forEach((item) => {
+        itemIdToClothingType[item.id] = item.clothingType;
+      });
+
+      console.log("Item ID to clothing type mapping:", itemIdToClothingType);
+
+      // Build the selectedItems object based on the outfitItemIds
+      const newSelectedItems = {};
+      outfitItemIds.forEach((itemId) => {
+        const clothingType = itemIdToClothingType[itemId];
+        console.log(
+          `For itemId ${itemId}, found clothingType: ${clothingType}`
+        );
+        if (clothingType) {
+          newSelectedItems[clothingType] = itemId;
+        }
+      });
+
+      console.log("New selected items:", newSelectedItems);
+
+      // Update the selectedItems state
+      setSelectedItems(newSelectedItems);
+    } catch (error) {
+      console.error("Error generating outfit:", error);
+    }
+  };
+
   return (
     <div className="flex">
       <div className="flex-col w-2/3 bg-[#183642]">
         <h1 className="m-8 mb-2 text-[#FEFFF3] font-bold">Today's Vibe</h1>
         <div className="w-1/2 flex gap-4 mx-8 mt-0 mb-4">
-          <Input placeholder="ie. Headed to Class"></Input>
-          <Button className="bg-[#CBC5EA] border-2 border-[#73628A] text-[#73628A] font-bold">
+          <Input
+            placeholder="e.g., Headed to Class"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <Button
+            className="bg-[#CBC5EA] border-2 border-[#73628A] text-[#73628A] font-bold"
+            onClick={handleGenerateOutfit}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -112,7 +208,7 @@ export default function Outfits() {
             top={tops}
             bottom={bottoms}
             footwear={footwears}
-            selectedItems={[]}
+            selectedItems={selectedItems}
           />
         </div>
       </div>
