@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key, required this.title});
@@ -158,16 +158,14 @@ class _RegisterPageState extends State<Register> {
                       'email': userInfoControllers[3].text,
                     };
                     debugPrint(userInfo.toString());
-                    http
-                        .post(
+                    post(
                       Uri.parse(
                           'https://api.wardrobewizard.fashion/api/users/register'),
                       headers: <String, String>{
                         "Content-Type": "application/json"
                       },
                       body: jsonEncode(userInfo),
-                    )
-                        .then(
+                    ).then(
                       (response) {
                         debugPrint(response.headers.toString());
                         ScaffoldMessenger.of(context).showSnackBar(
