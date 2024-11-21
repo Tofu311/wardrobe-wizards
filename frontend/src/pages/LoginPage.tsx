@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -53,6 +54,7 @@ type SignUpSchema = z.infer<typeof signUpSchema>;
 function LoginPage() {
   const [error, setError] = useState<string>("");
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -161,7 +163,7 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#1a237e] bg-[url('/assets/images/star-background.jpeg')] bg-cover bg-center flex items-center justify-center p-4 overflow-x-hidden">
-      <div className="w-full max-w-4xl h-[500px] flex">
+      <div className="w-full max-w-4xl flex rounded-lg overflow-hidden">
         {/* Sign Up Form */}
         {!isLogin ? (
           <>
@@ -227,12 +229,32 @@ function LoginPage() {
                       <FormItem>
                         <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Enter your password"
-                            className="bg-white text-black placeholder:text-gray-500"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              className="bg-white text-black placeholder:text-gray-500 pr-10"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-600"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                              <span className="sr-only">
+                                {showPassword
+                                  ? "Hide password"
+                                  : "Show password"}
+                              </span>
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -299,7 +321,7 @@ function LoginPage() {
               />
               <h1 className="text-4xl font-bold text-black">Wardrobe Wizard</h1>
             </div>
-            <div className="w-[50%] bg-[#73628A] p-6 rounded-r-lg">
+            <div className="w-[50%] bg-[#73628A] p-6 min-h-[500px] rounded-r-lg">
               <h2 className="text-2xl font-bold text-white mb-6">Login</h2>
               <Form {...form}>
                 <form
