@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
-const API_ROOT = "http://localhost:3000/api"; // local
-// const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: "Please enter your first name." }),
@@ -40,7 +41,9 @@ const formSchema = z.object({
     .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, {
       message:
         "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.",
-    }),
+    })
+    .optional()
+    .or(z.literal("")),
   email: z
     .string()
     .min(1, { message: "Please enter your email address." })
@@ -51,6 +54,7 @@ export default function MyAccount() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [userInfo, setUserInfo] = useState({
     firstName: "",
     lastName: "",
@@ -58,18 +62,9 @@ export default function MyAccount() {
     email: "",
   });
 
-  // DEVELOPMENT ONLY:
-  /*
-  const [userInfo, setUserInfo] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    username: "johndoe",
-    email: "john.doe@example.com",
-  });*/
-
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`${API_ROOT}/user/profile`, {
+      const response = await fetch(`${API_ROOT}/users/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -117,13 +112,19 @@ export default function MyAccount() {
     setIsLoading(true);
 
     try {
+      // Only include password in the request if it's not empty
+      const updateData = {
+        ...values,
+        password: values.password || undefined,
+      };
+
       const response = await fetch(`${API_ROOT}/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -255,14 +256,32 @@ export default function MyAccount() {
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter new password"
-                        type="password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter new password"
+                          type={showPassword ? "text" : "password"}
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                          <span className="sr-only">
+                            {showPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Leave blank if you don&apos;t want to change your password
+                      Leave blank if you don't want to change your password
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
