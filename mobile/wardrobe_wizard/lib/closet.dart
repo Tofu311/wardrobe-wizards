@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:flutter/material.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {
@@ -22,7 +25,7 @@ class _ClosetState extends State<Closet> {
     return await storage.read(key: 'auth_token');
   }
 
-  Future<void> takePicture() async {
+  Future<void> getImage() async {
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (BuildContext context) {
@@ -48,21 +51,59 @@ class _ClosetState extends State<Closet> {
     if (source != null) {
       final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
-        Response response = await post(
-          Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
-          headers: {"Authorization": "Bearer ${await getToken()}"},
-          body: {
-            'image': image.path,
-          },
-        );
-        debugPrint(response.body);
-        debugPrint(image.path);
         setState(
           () {
             images.add(image);
           },
         );
+        File compressedImage = await compressImage(File(image.path));
+        uploadImage(compressedImage);
       }
+    }
+  }
+
+  Future<File> compressImage(File file) async {
+    final rawImage = img.decodeImage(await file.readAsBytes());
+    final resizedImage =
+        img.copyResize(rawImage!, width: 1024); // Resize to 1024px width
+    final compressedImage = File(file.path)
+      ..writeAsBytesSync(img.encodeJpg(resizedImage, quality: 85));
+    return compressedImage;
+  }
+
+  Future<void> uploadImage(File file) async {
+    final uri = Uri.parse('https://api.wardrobewizard.fashion/api/clothing');
+    final token = await getToken();
+
+    try {
+      // Create multipart request
+      final request = MultipartRequest('POST', uri);
+
+      // Add headers (e.g., authorization)
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Add file as a multipart field
+      final mimeTypeData =
+          lookupMimeType(file.path)!.split('/'); // e.g., ['image', 'jpeg']
+      final multipartFile = await MultipartFile.fromPath(
+        'image', // Field name (match your backend's expectations)
+        file.path,
+        contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+      );
+      request.files.add(multipartFile);
+
+      // Send the request
+      final response = await request.send();
+
+      if (response.statusCode == 201) {
+        final responseBody = await Response.fromStream(response);
+        debugPrint('Image uploaded successfully: ${responseBody.body}');
+      } else {
+        throw Exception(
+            'Failed to upload image. Status: ${response.statusCode}');
+      }
+    } catch (error) {
+      debugPrint('Error uploading image: $error');
     }
   }
 
@@ -169,7 +210,7 @@ class _ClosetState extends State<Closet> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: takePicture,
+        onPressed: getImage,
         child: const Icon(Icons.add),
       ),
     );
