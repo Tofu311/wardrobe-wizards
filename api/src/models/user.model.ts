@@ -14,34 +14,40 @@ export interface UserDocument extends Document {
     type: string;
     coordinates: number[];
   };
+  verified: boolean; 
   createdAt: Date;
   updatedAt: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
-export interface UserModel extends Model<UserDocument> {
-}
+export interface UserModel extends Model<UserDocument> {}
 
-const UserSchema = new mongoose.Schema({
-  name: {
-    first: { type: String, required: true },
-    last: { type: String, required: true },
-  },
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  geolocation: {
-    type: { type: String, default: "Point" },
-    coordinates: {
-      type: [Number],
-      required: true,
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      first: { type: String, required: true },
+      last: { type: String, required: true },
     },
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    geolocation: {
+      type: { type: String, default: "Point" },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
+    verified: { type: Boolean, default: false }, 
   },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  }
+);
 
-UserSchema.methods.matchPassword = async function(enteredPassword: string): Promise<boolean> {
+UserSchema.methods.matchPassword = async function (
+  enteredPassword: string
+): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

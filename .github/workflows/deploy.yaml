@@ -58,6 +58,8 @@ jobs:
           export SPACES_ENDPOINT="${{ secrets.SPACES_ENDPOINT }}"
           export DIGITAL_OCEAN_ACCESS_KEY="${{ secrets.DIGITAL_OCEAN_ACCESS_KEY }}"
           export DIGITAL_OCEAN_SECRET_KEY="${{ secrets.DIGITAL_OCEAN_SECRET_KEY }}"
+          export EMAIL_USER="${{ secrets.EMAIL_USER }}"
+          export EMAIL_PASS="${{ secrets.EMAIL_PASS }}"
 
           # Verify variables are set
           echo "OPENAI_API_KEY is set"
@@ -68,6 +70,8 @@ jobs:
           echo "SPACES_ENDPOINT is set"
           echo "DIGITAL_OCEAN_ACCESS_KEY is set"
           echo "DIGITAL_OCEAN_SECRET_KEY is set"
+          echo "EMAIL_USER is set"
+          echo "EMAIL_PASS is set"
 
           # SSH into the server and execute commands
           sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$USER@$HOST" << EOF
@@ -89,6 +93,8 @@ jobs:
               -e SPACES_ENDPOINT="$SPACES_ENDPOINT" \
               -e DIGITAL_OCEAN_ACCESS_KEY="$DIGITAL_OCEAN_ACCESS_KEY" \
               -e DIGITAL_OCEAN_SECRET_KEY="$DIGITAL_OCEAN_SECRET_KEY" \
+              -e EMAIL_USER="$EMAIL_USER" \
+              -e EMAIL_PASS="$EMAIL_PASS" \
               mbruckert/wardrobe-wizard-backend:latest
 
             # Run the frontend container
