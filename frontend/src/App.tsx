@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import UserCloset from "./pages/UserCloset";
 import Outfits from "./pages/Outfits";
+import MyAccount from "./pages/MyAccount";
 
 function App() {
   //const [count, setCount] = useState(0);
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/closet" element={<UserCloset />} />
         <Route path="/outfits" element={<Outfits />} />
+        <Route path="/account" element={<MyAccount />} />
       </Routes>
     </Router>
   );
