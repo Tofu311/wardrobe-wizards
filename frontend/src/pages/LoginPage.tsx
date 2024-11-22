@@ -238,6 +238,8 @@ function LoginPage() {
         setRecoverySuccess(
           "A password reset link has been sent to your email."
         );
+        setShowPasswordRecovery(false);
+        passwordRecoveryForm.reset();
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Failed to initiate password recovery.");
@@ -489,6 +491,11 @@ function LoginPage() {
               </Form>
               {error && (
                 <div className="mt-4 text-red-500 text-center">{error}</div>
+              )}
+              {recoverySuccess && (
+                <div className="mt-4 text-green-500 text-center">
+                  {recoverySuccess}
+                </div>
               )}
               <p className="mt-4 text-center text-white">
                 Don't have an account?{" "}
