@@ -1,25 +1,46 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class Clothing {
-  final String name;
-  final String size;
-  final String color;
+  final String imagePath;
   final String type;
-  final String style;
-  final AssetImage image;
+  final String primaryColor;
+  final String? secondaryColor;
+  final List<String>? otherColors;
+  final String material;
+  final String temperature;
+  final String? description;
 
   Clothing({
-    required this.name,
-    required this.size,
-    required this.color,
+    required this.imagePath,
     required this.type,
-    required this.style,
-    required this.image,
+    required this.primaryColor,
+    this.secondaryColor,
+    this.otherColors,
+    required this.material,
+    required this.temperature,
+    this.description,
   });
 
   @override
   String toString() {
-    return 'Clothing{name: $name, size: $size, color: $color,'
-        'type: $type, style $style, image: ${image.assetName}';
+    return 'Clothing item:{imagePath: $imagePath, type: $type, primaryColor: $primaryColor'
+        'secondaryColor: $secondaryColor, otherColors: $otherColors, material: '
+        '$material, temperature: $temperature, description: $description}';
+  }
+
+  static Clothing fromJson(String body) {
+    final Map<String, dynamic> json = jsonDecode(body);
+    return Clothing(
+      imagePath: json['imagePath'],
+      type: json['type'],
+      primaryColor: json['primaryColor'],
+      secondaryColor: json['secondaryColor'],
+      otherColors: (json['otherColors'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      material: json['material'],
+      temperature: json['temperature'],
+      description: json['description'],
+    );
   }
 }

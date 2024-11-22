@@ -30,7 +30,7 @@ class _ProfileState extends State<Profile> {
           ),
         ],
       ),
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[Text("Coming soon")],

@@ -30,7 +30,7 @@ class _OutfitsState extends State<Outfits> {
           ),
         ],
       ),
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

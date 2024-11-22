@@ -6,6 +6,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:wardrobe_wizard/clothing.dart';
+import 'package:wardrobe_wizard/details.dart';
 import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {
@@ -19,6 +21,7 @@ class Closet extends StatefulWidget {
 class _ClosetState extends State<Closet> {
   final ImagePicker _picker = ImagePicker();
   final List<XFile> images = [];
+  final List<Clothing> closetItems = [];
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   Future<String?> getToken() async {
@@ -51,53 +54,47 @@ class _ClosetState extends State<Closet> {
     if (source != null) {
       final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
-        setState(
-          () {
-            images.add(image);
-          },
-        );
         File compressedImage = await compressImage(File(image.path));
         uploadImage(compressedImage);
       }
     }
   }
 
-  Future<File> compressImage(File file) async {
-    final rawImage = img.decodeImage(await file.readAsBytes());
-    final resizedImage =
-        img.copyResize(rawImage!, width: 1024); // Resize to 1024px width
-    final compressedImage = File(file.path)
+  Future<File> compressImage(File image) async {
+    final img.Image? rawImage = img.decodeImage(await image.readAsBytes());
+    final img.Image resizedImage = img.copyResize(rawImage!, width: 1024);
+    final File compressedImage = File(image.path)
       ..writeAsBytesSync(img.encodeJpg(resizedImage, quality: 85));
     return compressedImage;
   }
 
-  Future<void> uploadImage(File file) async {
-    final uri = Uri.parse('https://api.wardrobewizard.fashion/api/clothing');
-    final token = await getToken();
-
+  Future<void> uploadImage(File image) async {
+    final Uri uri =
+        Uri.parse('https://api.wardrobewizard.fashion/api/clothing');
+    final String? token = await getToken();
     try {
-      // Create multipart request
-      final request = MultipartRequest('POST', uri);
-
-      // Add headers (e.g., authorization)
+      final MultipartRequest request = MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
-
-      // Add file as a multipart field
-      final mimeTypeData =
-          lookupMimeType(file.path)!.split('/'); // e.g., ['image', 'jpeg']
-      final multipartFile = await MultipartFile.fromPath(
-        'image', // Field name (match your backend's expectations)
-        file.path,
+      final List<String> mimeTypeData = lookupMimeType(image.path)!.split('/');
+      final MultipartFile multipartFile = await MultipartFile.fromPath(
+        'image',
+        image.path,
         contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
       );
       request.files.add(multipartFile);
 
-      // Send the request
-      final response = await request.send();
+      final StreamedResponse response = await request.send();
 
       if (response.statusCode == 201) {
         final responseBody = await Response.fromStream(response);
         debugPrint('Image uploaded successfully: ${responseBody.body}');
+        //add a new clothing item to the list using the response data
+        setState(() {
+          Clothing newItem = Clothing.fromJson(responseBody.body);
+          closetItems.add(newItem);
+          images.add(XFile(image.path));
+        });
+        debugPrint('Closet items: $closetItems');
       } else {
         throw Exception(
             'Failed to upload image. Status: ${response.statusCode}');
@@ -182,24 +179,25 @@ class _ClosetState extends State<Closet> {
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                 ),
-                itemCount: images.length,
+                itemCount: closetItems.length,
                 itemBuilder: (BuildContext context, int index) {
                   return GestureDetector(
                     onLongPress: () => deleteImage(index),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Details(
+                            title: 'Details',
+                            clothing: closetItems[index],
+                          ),
+                        ),
+                      );
+                    },
                     child: Card(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Image.file(
-                              File(images[index].path),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Item ${index + 1}'),
-                          ),
-                        ],
+                      child: Image.network(
+                        closetItems[index].imagePath,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   );
