@@ -116,7 +116,7 @@ export default function UserCloset() {
     ? clothes
     : clothes.filter((item) => {
         return filter.some((f) => {
-          if (["RED", "BLUE", "GREEN", "YELLOW", "PURPLE"].includes(f)) {
+            if (Array.from(new Set(clothes.map((item) => item.primaryColor.toUpperCase()))).includes(f)) {
             return item.primaryColor.toUpperCase() === f; // Check for color
           }
           if (
@@ -409,99 +409,34 @@ export default function UserCloset() {
                     </AccordionItem>
                     <AccordionItem value="colors">
                       <AccordionTrigger
-                        className="text-black bg-[#CBC5EA] rounded h-full 
-                                    mb-2 px-2 hover:bg-primary/80 hover:text-[#CBC5EA]"
+                        className="text-black bg-[#CBC5EA] rounded h-full mb-2
+                                        px-2 hover:bg-primary/80 hover:text-[#CBC5EA]"
                       >
                         Colors
                       </AccordionTrigger>
-                      <AccordionContent className="w-3/4">
-                        <Button
+                        <AccordionContent className="w-3/4">
+                        {Array.from(new Set(clothes.map((item) => item.primaryColor.toUpperCase()))).map((color) => (
+                          <Button
+                          key={color}
                           variant={
-                            filter.includes("RED")
-                              ? "default_closet"
-                              : "outline_closet"
-                          }
-                          className="mb-2 w-full justify-start text-[#183642]"
-                          onClick={() =>
-                            setFilter((prev) =>
-                              prev.includes("RED")
-                                ? prev.filter((f) => f !== "RED")
-                                : [...prev.filter((f) => f !== "all"), "RED"]
-                            )
-                          }
-                        >
-                          Red
-                        </Button>
-                        <Button
-                          variant={
-                            filter.includes("BLUE")
-                              ? "default_closet"
-                              : "outline_closet"
+                            filter.includes(color)
+                            ? "default_closet"
+                            : "outline_closet"
                           }
                           className="mb-2 w-full justify-start"
                           onClick={() =>
                             setFilter((prev) =>
-                              prev.includes("BLUE")
-                                ? prev.filter((f) => f !== "BLUE")
-                                : [...prev.filter((f) => f !== "all"), "BLUE"]
+                            prev.includes(color)
+                              ? prev.filter((f) => f !== color)
+                              : [...prev.filter((f) => f !== "all"), color]
                             )
                           }
-                        >
-                          Blue
-                        </Button>
-                        <Button
-                          variant={
-                            filter.includes("GREEN")
-                              ? "default_closet"
-                              : "outline_closet"
-                          }
-                          className="mb-2 w-full justify-start"
-                          onClick={() =>
-                            setFilter((prev) =>
-                              prev.includes("GREEN")
-                                ? prev.filter((f) => f !== "GREEN")
-                                : [...prev.filter((f) => f !== "all"), "GREEN"]
-                            )
-                          }
-                        >
-                          Green
-                        </Button>
-                        <Button
-                          variant={
-                            filter.includes("YELLOW")
-                              ? "default_closet"
-                              : "outline_closet"
-                          }
-                          className="mb-2 w-full justify-start"
-                          onClick={() =>
-                            setFilter((prev) =>
-                              prev.includes("YELLOW")
-                                ? prev.filter((f) => f !== "YELLOW")
-                                : [...prev.filter((f) => f !== "all"), "YELLOW"]
-                            )
-                          }
-                        >
-                          Yellow
-                        </Button>
-                        <Button
-                          variant={
-                            filter.includes("PURPLE")
-                              ? "default_closet"
-                              : "outline_closet"
-                          }
-                          className="mb-2 w-full justify-start"
-                          onClick={() =>
-                            setFilter((prev) =>
-                              prev.includes("PURPLE")
-                                ? prev.filter((f) => f !== "PURPLE")
-                                : [...prev.filter((f) => f !== "all"), "PURPLE"]
-                            )
-                          }
-                        >
-                          Purple
-                        </Button>
-                      </AccordionContent>
-                    </AccordionItem>
+                          >
+                          {color.charAt(0) + color.slice(1).toLowerCase()}
+                          </Button>
+                        ))}
+                        </AccordionContent>
+                      </AccordionItem>
                   </Accordion>
                 </div>
               </div>
@@ -604,49 +539,10 @@ export default function UserCloset() {
           <DialogHeader>
             <DialogTitle>{selectedItem?.type}</DialogTitle>
             <DialogDescription>
-              Color:
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center">
-                  {selectedItem?.primaryColor || "N/A"}
-                  <svg
-                    className="ml-2 h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Select a Color</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Red</DropdownMenuItem>
-                  <DropdownMenuItem>Blue</DropdownMenuItem>
-                  <DropdownMenuItem>Green</DropdownMenuItem>
-                  <DropdownMenuItem>Yellow</DropdownMenuItem>
-                  <DropdownMenuItem>Purple</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              Color: <b>{selectedItem?.primaryColor || "N/A"}</b>
+                  
               <br />
-              Material:
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  {selectedItem?.material || "N/A"}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Select a Material</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Cotton</DropdownMenuItem>
-                  <DropdownMenuItem>Polyester</DropdownMenuItem>
-                  <DropdownMenuItem>Wool</DropdownMenuItem>
-                  <DropdownMenuItem>Silk</DropdownMenuItem>
-                  <DropdownMenuItem>Leather</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              Material: <b>{selectedItem?.material || "N/A"}</b>
             </DialogDescription>
           </DialogHeader>
           <div className="w-full aspect-square relative bg-white rounded-lg p-4">
