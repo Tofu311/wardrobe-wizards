@@ -5,7 +5,6 @@ import CarouselComponent from "./CarouselComponent";
 interface Item {
   id: string;
   imagePath: string;
-  clothingType?: string; // optional, since we might not use it here
 }
 
 // Define props structure

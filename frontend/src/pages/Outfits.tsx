@@ -1,8 +1,9 @@
-// Outfits.tsx
 import { useEffect, useState } from "react";
 import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
+import SelectedOutfit from "../customComponents/SelectedOutfit";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -20,45 +21,46 @@ export default function Outfits() {
   const [bottoms, setBottoms] = useState([]);
   const [footwears, setFootwears] = useState([]);
 
-  // Fetch clothing items and include the clothingType in each item
+  const navigate = useNavigate();
+
   useEffect(() => {
     const token = window.localStorage.getItem("token");
 
+    const handleFetch = (clothingType) => {
+      return fetch(`${API_ROOT}/clothing?clothingType=${clothingType}`, {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          if (response.status === 401) {
+            navigate("/");
+            throw new Error("Unauthorized");
+          }
+          return response.json();
+        })
+        .catch((error) => {
+          if (
+            error instanceof TypeError &&
+            error.message === "Failed to fetch"
+          ) {
+            // Likely a CORS error due to unauthorized access
+            navigate("/");
+            throw new Error("CORS error or network issue");
+          } else {
+            // Handle other types of errors if necessary
+            throw error;
+          }
+        });
+    };
+
     Promise.all([
-      fetch(`${API_ROOT}/clothing?clothingType=HEADWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=OUTERWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=TOP`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=BOTTOM`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=FOOTWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
+      handleFetch("HEADWEAR"),
+      handleFetch("OUTERWEAR"),
+      handleFetch("TOP"),
+      handleFetch("BOTTOM"),
+      handleFetch("FOOTWEAR"),
     ])
       .then(
         ([
@@ -70,35 +72,35 @@ export default function Outfits() {
         ]) => {
           // Map _id to id and add clothingType to each item
           setHeadwears(
-            headwearsData.map((item: { _id: string }) => ({
+            headwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "headwear",
             }))
           );
           setOuterwears(
-            outerwearsData.map((item: { _id: string }) => ({
+            outerwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "outerwear",
             }))
           );
           setTops(
-            topsData.map((item: { _id: string }) => ({
+            topsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "top",
             }))
           );
           setBottoms(
-            bottomsData.map((item: { _id: string }) => ({
+            bottomsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "bottom",
             }))
           );
           setFootwears(
-            footwearsData.map((item: { _id: string }) => ({
+            footwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "footwear",
@@ -176,8 +178,39 @@ export default function Outfits() {
 
   return (
     <div className="flex">
-      <div className="flex-col w-2/3 bg-[#183642]">
-        <h1 className="m-8 mb-2 text-[#FEFFF3] font-bold">Today's Vibe</h1>
+      <nav className="w-full bg-[#313D5A] p-2 flex justify-between items-center fixed top-0 left-0 z-50">
+        <h1 className="text-[#CBC5EA] text-2xl font-bold ml-4">
+          Wardrobe Wizard
+        </h1>
+        <div className="flex space-x-4">
+          <Button
+            onClick={() => {
+              navigate("/closet");
+            }}
+          >
+            Closet
+          </Button>
+          <Button
+            onClick={() => {
+              navigate("/account");
+            }}
+          >
+            My Account
+          </Button>
+          <Button
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/");
+            }}
+          >
+            Logout
+          </Button>
+        </div>
+      </nav>
+      <div className="flex-col w-[60%] bg-[#183642]">
+        <h1 className="m-8 mt-16 mb-2 text-[#FEFFF3] text-sm font-bold">
+          Today's Vibe
+        </h1>
         <div className="w-1/2 flex gap-4 mx-8 mt-0 mb-4">
           <Input
             placeholder="e.g., Headed to Class"
@@ -205,7 +238,7 @@ export default function Outfits() {
           </Button>
         </div>
 
-        <div className="w-5/6 ml-16">
+        <div className="w-[75%] ml-16">
           <WheelCarousel
             headwear={headwears}
             outerwear={outerwears}
@@ -216,7 +249,18 @@ export default function Outfits() {
           />
         </div>
       </div>
-      <div className="flex-col bg-[#FEFFF3] w-1/2 h-screen"></div>
+      <div className="flex-col bg-[#FEFFF3] w-1/2 h-screen">
+        <SelectedOutfit
+          selectedItems={selectedItems}
+          allItems={[
+            ...headwears,
+            ...outerwears,
+            ...tops,
+            ...bottoms,
+            ...footwears,
+          ]}
+        />
+      </div>
     </div>
   );
 }

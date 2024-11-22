@@ -14,6 +14,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -30,45 +31,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PlusCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { ClothingItem } from "@/types/types";
 import { useNavigate } from "react-router-dom";
+import SavedOutfits from "@/customComponents/SavedOutfits";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 const CLOTHING_TYPES = ["HEADWEAR", "TOP", "OUTERWEAR", "BOTTOM", "FOOTWEAR"];
-
-// DEVELOPMENT ONLY
-/*
-const mockClothes: ClothingItem[] = [
-  {
-    _id: "648b8bba3e2e456d6f5a8c2e",
-    type: "TOP",
-    imagePath: "/placeholder.svg",
-    primaryColor: "Blue",
-    material: "Cotton",
-    temperature: "Warm",
-  },
-  {
-    _id: "648b8bba3e2e456d6f5a8c3f",
-    type: "BOTTOM",
-    imagePath: "/placeholder2.svg",
-    primaryColor: "Black",
-    material: "Denim",
-    temperature: "Cold",
-  },
-];
-*/
 
 export default function UserCloset() {
   const [filter, setFilter] = useState<string[]>(["all"]);
@@ -79,6 +69,8 @@ export default function UserCloset() {
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<ClothingItem | null>(null);
 
   const navigate = useNavigate();
 
@@ -98,11 +90,23 @@ export default function UserCloset() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+
+      if (response.status === 401) {
+        navigate("/");
+        throw new Error("Unauthorized");
+      }
+
       const data = await response.json();
       setClothes(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching clothing:", error);
-      setError("Failed to fetch clothing items. Please try again.");
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        // Likely a CORS error due to unauthorized access
+        navigate("/");
+        throw new Error("CORS error or network issue");
+      } else {
+        console.error("Error fetching clothing:", error);
+        setError("Failed to fetch clothing items. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -182,6 +186,31 @@ export default function UserCloset() {
       }
     } catch (error) {
       console.error("Error reclassifying clothing:", error);
+    }
+  };
+
+  const handleDeleteClothing = async (clothingId: string) => {
+    try {
+      const response = await fetch(`${API_ROOT}/clothing/${clothingId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        setClothes((prevClothes) =>
+          prevClothes.filter((item) => item._id !== clothingId)
+        );
+        setSelectedItem(null);
+        setIsDeleteDialogOpen(false);
+        setItemToDelete(null);
+      } else {
+        throw new Error("Failed to delete clothing item");
+      }
+    } catch (error) {
+      console.error("Error deleting clothing:", error);
+      // TODO: Show error message to user here
     }
   };
 
@@ -562,9 +591,7 @@ export default function UserCloset() {
                 <h1 className="text-3xl font-bold mb-6 text-[#CBC5EA] mt-4 p-4 border-b-2 border-[#183642] sticky top-0 bg-[#313D5A] z-10">
                   My Outfits
                 </h1>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-                  {/* Outfit content here */}
-                </div>
+                <SavedOutfits />
               </>
             )}
           </div>
@@ -649,8 +676,46 @@ export default function UserCloset() {
               ))}
             </SelectContent>
           </Select>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setItemToDelete(selectedItem);
+                setIsDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Item
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this
+              clothing item from your closet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                itemToDelete && handleDeleteClothing(itemToDelete._id)
+              }
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

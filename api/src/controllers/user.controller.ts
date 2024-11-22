@@ -146,6 +146,16 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     }
 };
 
+const resetPasswordSchema = z.object({
+    password: z
+    .string()
+    .min(1, { message: "Please enter a password." })
+    .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, {
+      message:
+        "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.",
+    }),
+});
+
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
     const { token } = req.query;
     const { newPassword } = req.body;
@@ -174,6 +184,17 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
                 </form>
             `);
         } else if (req.method === "POST") {
+            // Validate the new password using the schema
+            try {
+                resetPasswordSchema.parse({ password: newPassword });
+            } catch (error) {
+                res.status(400).json({
+                    message: "Password validation failed",
+                });
+                console.log("Error validating password:", error);
+                return;
+            }
+
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             user.password = hashedPassword;
             await user.save();

@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -61,6 +62,7 @@ export default function MyAccount() {
     username: "",
     email: "",
   });
+  const navigate = useNavigate();
 
   const fetchUserProfile = async () => {
     try {
@@ -162,147 +164,197 @@ export default function MyAccount() {
   }, [form, toast]);
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>
-          View or update your personal information
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!isEditing ? (
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium">First Name</h3>
-              <p className="text-sm text-gray-500">{userInfo.firstName}</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium">Last Name</h3>
-              <p className="text-sm text-gray-500">{userInfo.lastName}</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium">Username</h3>
-              <p className="text-sm text-gray-500">{userInfo.username}</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium">Email</h3>
-              <p className="text-sm text-gray-500">{userInfo.email}</p>
-            </div>
-            <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-          </div>
-        ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="johndoe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="john.doe@example.com"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          placeholder="Enter new password"
-                          type={showPassword ? "text" : "password"}
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                          <span className="sr-only">
-                            {showPassword ? "Hide password" : "Show password"}
-                          </span>
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Leave blank if you don't want to change your password
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex space-x-4">
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Updating..." : "Update Profile"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancel
-                </Button>
+    <div className="flex flex-col min-h-screen bg-[#183642]">
+      {/* Navbar */}
+      <nav className="w-full bg-[#313D5A] p-2 flex justify-between items-center fixed top-0 left-0 z-50">
+        <h1 className="text-[#CBC5EA] text-2xl font-bold ml-4">
+          Wardrobe Wizard
+        </h1>
+        <div className="flex space-x-4">
+          <Button
+            onClick={() => {
+              navigate("/outfits");
+            }}
+          >
+            Generate Outfit
+          </Button>
+          <Button
+            onClick={() => {
+              navigate("/closet");
+            }}
+          >
+            My Closet
+          </Button>
+          <Button
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/");
+            }}
+          >
+            Logout
+          </Button>
+        </div>
+      </nav>
+
+      {/* Main content */}
+      <div className="flex-1 flex items-center justify-center p-4 pt-20">
+        <Card className="w-full max-w-2xl bg-white">
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+            <CardDescription>
+              View or update your personal information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!isEditing ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium">First Name</h3>
+                  <p className="text-sm text-gray-500">{userInfo.firstName}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium">Last Name</h3>
+                  <p className="text-sm text-gray-500">{userInfo.lastName}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium">Username</h3>
+                  <p className="text-sm text-gray-500">{userInfo.username}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium">Email</h3>
+                  <p className="text-sm text-gray-500">{userInfo.email}</p>
+                </div>
+                <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
               </div>
-            </form>
-          </Form>
-        )}
-      </CardContent>
-    </Card>
+            ) : (
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-8"
+                >
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your first name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your last name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your email"
+                            type="email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              placeholder="Enter new password"
+                              type={showPassword ? "text" : "password"}
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                              <span className="sr-only">
+                                {showPassword
+                                  ? "Hide password"
+                                  : "Show password"}
+                              </span>
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Leave blank if you don't want to change your password
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex space-x-4">
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Updating..." : "Update Profile"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditing(false);
+                        form.reset();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
