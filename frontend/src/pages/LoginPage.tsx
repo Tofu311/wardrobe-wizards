@@ -11,6 +11,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -55,6 +64,7 @@ function LoginPage() {
   const [error, setError] = useState<string>("");
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
 
   const navigate = useNavigate();
 
@@ -98,7 +108,7 @@ function LoginPage() {
         response.json().then((data) => {
           localStorage.setItem("token", data.token);
         });
-        navigate("/closet");
+        setShowVerificationAlert(true);
         console.log("User registered successfully.");
       } else {
         const data = await response.json();
@@ -159,6 +169,7 @@ function LoginPage() {
 
   useEffect(() => {
     form.reset(isLogin ? loginDefaults : signUpDefaults);
+    setShowPassword(false);
   }, [isLogin, form]);
 
   return (
@@ -278,7 +289,7 @@ function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-[25%]">
+                  <Button type="submit" className="w-[25%] mt-4">
                     Sign Up
                   </Button>
                 </form>
@@ -352,12 +363,32 @@ function LoginPage() {
                       <FormItem>
                         <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Enter your password"
-                            className="bg-white text-black placeholder:text-gray-500"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              className="bg-white text-black placeholder:text-gray-500 pr-10"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-600"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                              <span className="sr-only">
+                                {showPassword
+                                  ? "Hide password"
+                                  : "Show password"}
+                              </span>
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -387,6 +418,32 @@ function LoginPage() {
           </>
         )}
       </div>
+
+      <AlertDialog
+        open={showVerificationAlert}
+        onOpenChange={setShowVerificationAlert}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verification Email Sent</AlertDialogTitle>
+            <AlertDialogDescription>
+              A verification email has been sent to your email address. Please
+              check your inbox and follow the instructions to verify your
+              account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                setShowVerificationAlert(false);
+                setIsLogin(true);
+              }}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
