@@ -17,14 +17,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -116,7 +108,11 @@ export default function UserCloset() {
     ? clothes
     : clothes.filter((item) => {
         return filter.some((f) => {
-            if (Array.from(new Set(clothes.map((item) => item.primaryColor.toUpperCase()))).includes(f)) {
+          if (
+            Array.from(
+              new Set(clothes.map((item) => item.primaryColor.toUpperCase()))
+            ).includes(f)
+          ) {
             return item.primaryColor.toUpperCase() === f; // Check for color
           }
           if (
@@ -414,29 +410,35 @@ export default function UserCloset() {
                       >
                         Colors
                       </AccordionTrigger>
-                        <AccordionContent className="w-3/4">
-                        {Array.from(new Set(clothes.map((item) => item.primaryColor.toUpperCase()))).map((color) => (
-                          <Button
-                          key={color}
-                          variant={
-                            filter.includes(color)
-                            ? "default_closet"
-                            : "outline_closet"
-                          }
-                          className="mb-2 w-full justify-start"
-                          onClick={() =>
-                            setFilter((prev) =>
-                            prev.includes(color)
-                              ? prev.filter((f) => f !== color)
-                              : [...prev.filter((f) => f !== "all"), color]
+                      <AccordionContent className="w-3/4">
+                        {Array.from(
+                          new Set(
+                            clothes.map((item) =>
+                              item.primaryColor.toUpperCase()
                             )
-                          }
+                          )
+                        ).map((color) => (
+                          <Button
+                            key={color}
+                            variant={
+                              filter.includes(color)
+                                ? "default_closet"
+                                : "outline_closet"
+                            }
+                            className="mb-2 w-full justify-start"
+                            onClick={() =>
+                              setFilter((prev) =>
+                                prev.includes(color)
+                                  ? prev.filter((f) => f !== color)
+                                  : [...prev.filter((f) => f !== "all"), color]
+                              )
+                            }
                           >
-                          {color.charAt(0) + color.slice(1).toLowerCase()}
+                            {color.charAt(0) + color.slice(1).toLowerCase()}
                           </Button>
                         ))}
-                        </AccordionContent>
-                      </AccordionItem>
+                      </AccordionContent>
+                    </AccordionItem>
                   </Accordion>
                 </div>
               </div>
@@ -540,7 +542,6 @@ export default function UserCloset() {
             <DialogTitle>{selectedItem?.type}</DialogTitle>
             <DialogDescription>
               Color: <b>{selectedItem?.primaryColor || "N/A"}</b>
-                  
               <br />
               Material: <b>{selectedItem?.material || "N/A"}</b>
             </DialogDescription>
