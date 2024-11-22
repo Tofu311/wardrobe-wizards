@@ -53,6 +53,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { ClothingItem } from "@/types/types";
 import { useNavigate } from "react-router-dom";
+import SavedOutfits from "@/customComponents/SavedOutfits";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -590,9 +591,7 @@ export default function UserCloset() {
                 <h1 className="text-3xl font-bold mb-6 text-[#CBC5EA] mt-4 p-4 border-b-2 border-[#183642] sticky top-0 bg-[#313D5A] z-10">
                   My Outfits
                 </h1>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-                  {/* Outfit content here */}
-                </div>
+                <SavedOutfits />
               </>
             )}
           </div>
