@@ -1,9 +1,9 @@
-// Outfits.tsx
 import { useEffect, useState } from "react";
 import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import SelectedOutfit from "../customComponents/SelectedOutfit";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -178,8 +178,39 @@ export default function Outfits() {
 
   return (
     <div className="flex">
-      <div className="flex-col w-2/3 bg-[#183642]">
-        <h1 className="m-8 mb-2 text-[#FEFFF3] font-bold">Today's Vibe</h1>
+      <nav className="w-full bg-[#313D5A] p-2 flex justify-between items-center fixed top-0 left-0 z-50">
+        <h1 className="text-[#CBC5EA] text-2xl font-bold ml-4">
+          Wardrobe Wizard
+        </h1>
+        <div className="flex space-x-4">
+          <Button
+            onClick={() => {
+              navigate("/closet");
+            }}
+          >
+            Closet
+          </Button>
+          <Button
+            onClick={() => {
+              navigate("/account");
+            }}
+          >
+            My Account
+          </Button>
+          <Button
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/");
+            }}
+          >
+            Logout
+          </Button>
+        </div>
+      </nav>
+      <div className="flex-col w-[60%] bg-[#183642]">
+        <h1 className="m-8 mt-16 mb-2 text-[#FEFFF3] text-sm font-bold">
+          Today's Vibe
+        </h1>
         <div className="w-1/2 flex gap-4 mx-8 mt-0 mb-4">
           <Input
             placeholder="e.g., Headed to Class"
@@ -207,7 +238,7 @@ export default function Outfits() {
           </Button>
         </div>
 
-        <div className="w-5/6 ml-16">
+        <div className="w-[75%] ml-16">
           <WheelCarousel
             headwear={headwears}
             outerwear={outerwears}
@@ -218,7 +249,18 @@ export default function Outfits() {
           />
         </div>
       </div>
-      <div className="flex-col bg-[#FEFFF3] w-1/2 h-screen"></div>
+      <div className="flex-col bg-[#FEFFF3] w-1/2 h-screen">
+        <SelectedOutfit
+          selectedItems={selectedItems}
+          allItems={[
+            ...headwears,
+            ...outerwears,
+            ...tops,
+            ...bottoms,
+            ...footwears,
+          ]}
+        />
+      </div>
     </div>
   );
 }

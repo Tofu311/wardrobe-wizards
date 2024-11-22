@@ -1,4 +1,3 @@
-// CarouselComponent.tsx
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,7 +9,6 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
-// Define prop types
 interface CarouselComponentProps {
   items: { id: string; imagePath: string }[];
   selectedItemId?: string;
@@ -24,7 +22,6 @@ export default function CarouselComponent({
   const apiRef = React.useRef<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
 
-  // Memoize displayedItems to prevent unnecessary re-renders
   const displayedItems = React.useMemo(() => {
     const minLength = 10;
     if (items.length === 0) {
@@ -35,7 +32,6 @@ export default function CarouselComponent({
     }
   }, [items]);
 
-  // Update selectedIndex when the carousel selection changes
   React.useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
@@ -46,14 +42,11 @@ export default function CarouselComponent({
     };
 
     api.on("select", onSelect);
-
-    // Cleanup event listener on unmount
     return () => {
       api.off("select", onSelect);
     };
   }, []);
 
-  // Scroll to selectedItemId when it changes
   React.useEffect(() => {
     const api = apiRef.current;
     if (!api || !selectedItemId) return;
@@ -63,13 +56,13 @@ export default function CarouselComponent({
     );
 
     if (index !== -1) {
-      api.scrollTo(index, false); // 'false' disables animation
+      api.scrollTo(index, false);
       setSelectedIndex(index);
     }
   }, [selectedItemId, displayedItems]);
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       {displayedItems.length > 0 ? (
         <Carousel
           setApi={(api) => {
@@ -85,26 +78,30 @@ export default function CarouselComponent({
             {displayedItems.map((item, index) => (
               <CarouselItem key={`${item.id}-${index}`} className="basis-1/5">
                 <Card
-                  className={`h-32 ${
+                  className={`h-28 w-28 ${
                     selectedIndex === index ? "bg-gray-300" : ""
                   }`}
                 >
-                  <CardContent className="h-32 flex items-center justify-center">
-                    <img
-                      src={item.imagePath}
-                      alt={`Item ${item.id}`}
-                      className="h-32"
-                    />
+                  <CardContent className="h-full p-2 flex items-center justify-center">
+                    <div className="w-full h-full relative">
+                      <img
+                        src={item.imagePath}
+                        alt={`Item ${item.id}`}
+                        className="absolute inset-0 w-full h-full object-contain"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="bg-[#CBC5EA]" />
-          <CarouselNext className="bg-[#CBC5EA]" />
+          <CarouselPrevious className="bg-[#CBC5EA] h-8 w-8" />
+          <CarouselNext className="bg-[#CBC5EA] h-8 w-8" />
         </Carousel>
       ) : (
-        <div className="text-center text-gray-500">No items to display.</div>
+        <div className="text-center text-gray-500 h-28">
+          No items to display.
+        </div>
       )}
     </div>
   );
