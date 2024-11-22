@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import React from "react";
 
 const SelectedOutfit = ({ selectedItems, allItems }) => {
@@ -23,8 +24,63 @@ const SelectedOutfit = ({ selectedItems, allItems }) => {
   const selectedBottom = findDefaultOrSelectedItem("bottom", bottoms);
   const selectedFootwear = findDefaultOrSelectedItem("footwear", footwears);
 
+  const handleSaveOutfit = async () => {
+    const selectedIds = [
+      selectedHeadwear?.id,
+      selectedOuterwear?.id,
+      selectedTop?.id,
+      selectedBottom?.id,
+      selectedFootwear?.id,
+    ].filter(Boolean); // Remove any null/undefined values
+
+    try {
+      const response = await fetch(
+        "https://api.wardrobewizard.fashion/api/clothing/saveOutfit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${window.localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ items: selectedIds }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        alert("Outfit saved successfully!");
+        console.log("Save result:", result);
+      } else {
+        alert("Failed to save outfit. Please try again.");
+        console.error("Save error:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving outfit:", error);
+      alert("An error occurred while saving the outfit.");
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-start h-screen pt-24 px-8 bg-[#FEFFF3]">
+    <div className="flex flex-col items-center justify-start h-screen pt-12 px-8 bg-[#FEFFF3]">
+      <div className="flex justify-end w-full mb-4 mt-4">
+        <Button variant="outline" onClick={handleSaveOutfit}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="size-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 48.507 48.507 1 0 1 11.186 0Z"
+            />
+          </svg>
+          Save Outfit
+        </Button>
+      </div>
       {selectedHeadwear && (
         <div className="h-28 mb-2">
           <img
