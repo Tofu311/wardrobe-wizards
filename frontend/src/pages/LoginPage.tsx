@@ -81,6 +81,7 @@ function LoginPage() {
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [showEmailRecovery, setShowEmailRecovery] = useState(false);
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
+  const [recoveredEmail, setRecoveredEmail] = useState<string | null>(null);
   const [recoverySuccess, setRecoverySuccess] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -208,16 +209,18 @@ function LoginPage() {
       });
 
       if (response.status === 200) {
-        setRecoverySuccess(
-          "An email with your account information has been sent."
-        );
+        const responseData = await response.json();
+        setRecoveredEmail(responseData.email);
+        setError("");
       } else {
         const errorData = await response.json();
         setError(errorData.message || "Failed to recover email.");
+        setRecoveredEmail(null);
       }
     } catch (error) {
       console.error("Failed to recover email: ", error);
       setError("An error occurred during email recovery.");
+      setRecoveredEmail(null);
     }
   }
 
@@ -555,7 +558,12 @@ function LoginPage() {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => setShowEmailRecovery(false)}
+                onClick={() => {
+                  setShowEmailRecovery(false);
+                  setRecoveredEmail(null);
+                  setError("");
+                  emailRecoveryForm.reset();
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -579,14 +587,46 @@ function LoginPage() {
                   </FormItem>
                 )}
               />
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction type="submit">
-                  Recover Email
-                </AlertDialogAction>
-              </AlertDialogFooter>
+              {recoveredEmail ? (
+                <div className="mt-4 text-center">
+                  <p className="font-semibold">Your email address is:</p>
+                  <p className="text-blue-600">{recoveredEmail}</p>
+                </div>
+              ) : (
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    onClick={() => {
+                      setShowEmailRecovery(false);
+                      setError("");
+                      emailRecoveryForm.reset();
+                    }}
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction type="submit">
+                    Recover Email
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              )}
             </form>
           </Form>
+          {error && (
+            <div className="mt-4 text-red-500 text-center">{error}</div>
+          )}
+          {recoveredEmail && (
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowEmailRecovery(false);
+                  setRecoveredEmail(null);
+                  setError("");
+                  emailRecoveryForm.reset();
+                }}
+              >
+                Close
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          )}
         </AlertDialogContent>
       </AlertDialog>
 
