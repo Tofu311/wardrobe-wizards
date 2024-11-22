@@ -40,13 +40,14 @@ class _LoginPageState extends State<Login> {
       await storage.write(key: 'auth_token', value: token);
       String? storedToken = await storage.read(key: 'auth_token');
       debugPrint('Token from storage: $storedToken');
-      // Navigate to the home screen
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
       String message = jsonDecode(response.body)['message'];
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),

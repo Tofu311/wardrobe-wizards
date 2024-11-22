@@ -134,13 +134,13 @@ class _ClosetState extends State<Closet> {
         },
       );
       if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);        
-          setState(() {
-            closetItems.clear();
-            for (var item in data) {
-              closetItems.add(Clothing.fromJson(item));
-            }
-          });        
+        List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          closetItems.clear();
+          for (var item in data) {
+            closetItems.add(Clothing.fromJson(item));
+          }
+        });
         debugPrint('Closet items: $closetItems');
       } else {
         throw Exception(
@@ -219,6 +219,7 @@ class _ClosetState extends State<Closet> {
                       );
                     },
                     child: Card(
+                      color: const Color(0xffd6cea7),
                       child: Image.network(
                         closetItems[index].imagePath,
                         fit: BoxFit.contain,

@@ -167,6 +167,7 @@ class _RegisterPageState extends State<Register> {
                       body: jsonEncode(userInfo),
                     ).then(
                       (response) {
+                        if (!context.mounted) return;
                         debugPrint(response.headers.toString());
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
