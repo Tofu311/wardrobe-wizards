@@ -14,6 +14,7 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -56,15 +57,31 @@ const signUpSchema = z.object({
     .email({ message: "Invalid email address." }),
 });
 
+const emailRecoverySchema = z.object({
+  username: z.string().min(1, { message: "Please enter your username." }),
+});
+
+const passwordRecoverySchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "Please enter your email address." })
+    .email({ message: "Invalid email address." }),
+});
+
 // Infer types from the schemas
 type LoginSchema = z.infer<typeof loginSchema>;
 type SignUpSchema = z.infer<typeof signUpSchema>;
+type EmailRecoverySchema = z.infer<typeof emailRecoverySchema>;
+type PasswordRecoverySchema = z.infer<typeof passwordRecoverySchema>;
 
 function LoginPage() {
   const [error, setError] = useState<string>("");
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+  const [showEmailRecovery, setShowEmailRecovery] = useState(false);
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
+  const [recoverySuccess, setRecoverySuccess] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -81,9 +98,27 @@ function LoginPage() {
     email: "",
   };
 
+  const emailRecoveryDefaults: EmailRecoverySchema = {
+    username: "",
+  };
+
+  const passwordRecoveryDefaults: PasswordRecoverySchema = {
+    email: "",
+  };
+
   const form = useForm<LoginSchema | SignUpSchema>({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
     defaultValues: isLogin ? loginDefaults : signUpDefaults,
+  });
+
+  const emailRecoveryForm = useForm<EmailRecoverySchema>({
+    resolver: zodResolver(emailRecoverySchema),
+    defaultValues: emailRecoveryDefaults,
+  });
+
+  const passwordRecoveryForm = useForm<PasswordRecoverySchema>({
+    resolver: zodResolver(passwordRecoverySchema),
+    defaultValues: passwordRecoveryDefaults,
   });
 
   async function registerUser() {
@@ -162,6 +197,54 @@ function LoginPage() {
     }
   }
 
+  async function recoverEmail(data: EmailRecoverySchema) {
+    try {
+      const response = await fetch(`${API_ROOT}/users/recover-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.status === 200) {
+        setRecoverySuccess(
+          "An email with your account information has been sent."
+        );
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to recover email.");
+      }
+    } catch (error) {
+      console.error("Failed to recover email: ", error);
+      setError("An error occurred during email recovery.");
+    }
+  }
+
+  async function recoverPassword(data: PasswordRecoverySchema) {
+    try {
+      const response = await fetch(`${API_ROOT}/users/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.status === 200) {
+        setRecoverySuccess(
+          "A password reset link has been sent to your email."
+        );
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to initiate password recovery.");
+      }
+    } catch (error) {
+      console.error("Failed to recover password: ", error);
+      setError("An error occurred during password recovery.");
+    }
+  }
+
   // const toggleForm = () => {
   //   setIsLogin((prev) => !prev);
   //   form.reset(isLogin ? signUpDefaults : loginDefaults);
@@ -170,6 +253,8 @@ function LoginPage() {
   useEffect(() => {
     form.reset(isLogin ? loginDefaults : signUpDefaults);
     setShowPassword(false);
+    setError("");
+    setRecoverySuccess(null);
   }, [isLogin, form]);
 
   return (
@@ -414,11 +499,26 @@ function LoginPage() {
                   Sign Up
                 </button>
               </p>
+              <div className="mt-4 text-center space-x-4">
+                <button
+                  onClick={() => setShowEmailRecovery(true)}
+                  className="text-blue-300 hover:underline"
+                >
+                  Forgot Email
+                </button>
+                <button
+                  onClick={() => setShowPasswordRecovery(true)}
+                  className="text-blue-300 hover:underline"
+                >
+                  Forgot Password
+                </button>
+              </div>
             </div>
           </>
         )}
       </div>
 
+      {/* Email Verification Alert Dialog */}
       <AlertDialog
         open={showVerificationAlert}
         onOpenChange={setShowVerificationAlert}
@@ -442,6 +542,103 @@ function LoginPage() {
               OK
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Email Recovery Dialog */}
+      <AlertDialog open={showEmailRecovery} onOpenChange={setShowEmailRecovery}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center justify-between">
+              <AlertDialogTitle>Recover Email</AlertDialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setShowEmailRecovery(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </AlertDialogHeader>
+          <Form {...emailRecoveryForm}>
+            <form
+              onSubmit={emailRecoveryForm.handleSubmit(recoverEmail)}
+              className="space-y-3"
+            >
+              <FormField
+                control={emailRecoveryForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction type="submit">
+                  Recover Email
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </form>
+          </Form>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Password Recovery Dialog */}
+      <AlertDialog
+        open={showPasswordRecovery}
+        onOpenChange={setShowPasswordRecovery}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center justify-between">
+              <AlertDialogTitle>Recover Password</AlertDialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setShowPasswordRecovery(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </AlertDialogHeader>
+          <Form {...passwordRecoveryForm}>
+            <form
+              onSubmit={passwordRecoveryForm.handleSubmit(recoverPassword)}
+              className="space-y-3"
+            >
+              <FormField
+                control={passwordRecoveryForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction type="submit">
+                  Recover Password
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </form>
+          </Form>
         </AlertDialogContent>
       </AlertDialog>
     </div>
