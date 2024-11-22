@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,244 +12,282 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import styles from "./stylesheets/LoginPage.module.css"; // Import the styles
+import { useNavigate } from "react-router-dom";
+
+// const API_ROOT = "http://localhost:3000/api"; // local
+const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
 
 // Define the schema for login form validation
 const loginSchema = z.object({
-  username: z.string()
-  .min(1, { message: "Please enter your username." }),
+  username: z.string().min(1, { message: "Please enter your username." }),
   password: z.string().min(1, { message: "Please enter your password." }),
 });
 
 // Define the schema for registration form validation
 const signUpSchema = z.object({
-  name: z
-  .string()
-  .min(1, { message: "Please enter your first name.", }),
-
+  first_name: z.string().min(1, { message: "Please enter your first name." }),
+  last_name: z.string().min(1, { message: "Please enter your last name." }),
   username: z
-  .string()
-  .min(1, { message: "Please enter a username.", })
-  .regex(/^[a-zA-Z0-9]+$/, { message: "Username can only contain letters (A-Z) and numbers (0-9)." }),  
-
+    .string()
+    .min(1, { message: "Please enter a username." })
+    .regex(/^[a-zA-Z0-9]+$/, {
+      message: "Username can only contain letters (A-Z) and numbers (0-9).",
+    }),
   password: z
-  .string()
-  .min(1, { message: "Please enter a password.", })
-  .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, { message: "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.", }),
-
+    .string()
+    .min(1, { message: "Please enter a password." })
+    .regex(/(?=.*\d)(?=.*[A-Z]).{8,}/, {
+      message:
+        "Password must be at least 8 characters long and contain at least one uppercase letter and one digit.",
+    }),
   email: z
-  .string()
-  .min(1, { message: "Please enter your email address.", })
-  .email({ message: "Invalid email address.", }),
-
-  geolocation: z
-  .string()
-  .min(1, { message: "Please enter your geolocation.", }),
-
+    .string()
+    .min(1, { message: "Please enter your email address." })
+    .email({ message: "Invalid email address." }),
 });
 
-function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true); // State to track the current form
+// Define the schema for email recovery
+const emailRecoverySchema = z.object({
+  username: z.string().min(1, { message: "Please enter your username." }),
+});
 
-  // Initialize the form with useForm for login
-  const form = useForm({
+// Define the schema for forgot password
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, { message: "Please enter your email." }).email({
+    message: "Invalid email address.",
+  }),
+});
+
+// Infer types from the schemas
+type LoginSchema = z.infer<typeof loginSchema>;
+type SignUpSchema = z.infer<typeof signUpSchema>;
+type EmailRecoverySchema = z.infer<typeof emailRecoverySchema>;
+type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+
+function LoginPage() {
+  const [error, setError] = useState<string>("");
+  const [infoMessage, setInfoMessage] = useState<string>(""); // Informational messages
+  const [isLogin, setIsLogin] = useState(true);
+  const [showEmailRecovery, setShowEmailRecovery] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const navigate = useNavigate();
+
+  // Form defaults
+  const loginDefaults: LoginSchema = { username: "", password: "" };
+  const signUpDefaults: SignUpSchema = {
+    first_name: "",
+    last_name: "",
+    username: "",
+    password: "",
+    email: "",
+  };
+
+  // Form hooks
+  const form = useForm<LoginSchema | SignUpSchema>({
     resolver: zodResolver(isLogin ? loginSchema : signUpSchema),
-    defaultValues: {
-      name: "",
-      username: "",
-      password: "",
-      email: "", 
-      geolocation: "",
-    },
+    defaultValues: isLogin ? loginDefaults : signUpDefaults,
   });
 
+  const emailRecoveryForm = useForm<EmailRecoverySchema>({
+    resolver: zodResolver(emailRecoverySchema),
+    defaultValues: { username: "" },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordSchema>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  // Register user
   async function registerUser() {
     try {
-      const response = await fetch("http://localhost:3000/api/users", {
+      const formData = form.getValues() as SignUpSchema;
+      const { first_name, last_name, ...rest } = formData;
+
+      const data = { name: { first: first_name, last: last_name }, ...rest };
+
+      const response = await fetch(`${API_ROOT}/users/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form.getValues()),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
-      if (response.ok) {
-        console.log("User registered successfully.");
+      if (response.status === 201 || response.status === 200) {
+        setInfoMessage("Registration successful. Check your email to verify your account.");
+        setError("");
       } else {
-        console.error("Failed to register user.");
+        const data = await response.json();
+        setError(data.message || "Failed to register user.");
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Failed to register user: ", error);
+      setError("An error occurred during registration.");
     }
   }
 
+  // Login user
   async function loginUser() {
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const data = form.getValues() as LoginSchema;
+
+      const response = await fetch(`${API_ROOT}/users/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form.getValues()),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        // create error div
-        console.error("Invalid Credentials.");
+      if (response.status === 201 || response.status === 200) {
+        response.json().then((data) => {
+          localStorage.setItem("token", data.token);
+        });
+        navigate("/closet");
+        console.log("User logged in successfully.");
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to login.");
       }
-    } 
-    catch (error) 
-    {
+    } catch (error) {
       console.error("Failed to login user: ", error);
+      setError("An error occurred during login.");
     }
   }
 
-  // Define the submit handler
+  // Recover email
+  async function recoverEmail() {
+    try {
+      const { username } = emailRecoveryForm.getValues();
+
+      const response = await fetch(`${API_ROOT}/users/recover-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();
+        setInfoMessage(`The email associated with this username is: ${data.email}`);
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to recover email.");
+      }
+    } catch (error) {
+      console.error("Failed to recover email: ", error);
+      setError("An error occurred during email recovery.");
+    }
+  }
+
+  // Forgot password
+  async function forgotPassword() {
+    try {
+      const { email } = forgotPasswordForm.getValues();
+
+      const response = await fetch(`${API_ROOT}/users/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.status === 200) {
+        setInfoMessage("Password recovery email sent. Please check your email.");
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to send password recovery email.");
+      }
+    } catch (error) {
+      console.error("Failed to send forgot password request: ", error);
+      setError("An error occurred during forgot password.");
+    }
+  }
+
+  // Handle submit
   async function onSubmit() {
     try {
       if (isLogin) {
-        // Login
         await loginUser();
       } else {
-        // Register
         await registerUser();
       }
-    }
-    catch(error) {
+    } catch (error) {
       console.error("Failed to submit data: ", error);
-    }  
-}
+    }
+  }
 
-  // Function to toggle between login and registration
-  const toggleForm = () => {
-    setIsLogin((prev) => !prev); // Toggle the state
-    form.reset(); // Reset the form when toggling
-  };
+  useEffect(() => {
+    form.reset(isLogin ? loginDefaults : signUpDefaults);
+  }, [isLogin, form]);
 
   return (
-    <div className={styles.backgroundContainer}>
-      <div className={styles.outerContainer}>
-
-        
-        {/* Sign Up Form */}
-        {!isLogin && (
-          <div className={`absolute w-full transition-transform duration-500 ${isLogin ? "translate-x-full" : "translate-x-0"}`}>
-            <div className={`${styles.formContainer} ${styles.roundedLeft}`}>
-              <h2 className="text-xl font-bold mb-6">Sign Up</h2>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField control={form.control} name="name" render={({ field }) => (
+    <div className="min-h-screen w-full bg-[#1a237e] bg-[url('/assets/images/star-background.jpeg')] bg-cover bg-center flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl h-auto flex">
+        {showEmailRecovery ? (
+          <div className="w-full bg-[#73628A] p-6 rounded-lg">
+            <h2 className="text-2xl font-bold text-white mb-3">Recover Email</h2>
+            <Form {...emailRecoveryForm}>
+              <form onSubmit={emailRecoveryForm.handleSubmit(recoverEmail)} className="space-y-3">
+                <FormField
+                  control={emailRecoveryForm.control}
+                  name="username"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
+                      <FormLabel className="text-white">Username</FormLabel>
                       <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your Name" {...field} />
+                        <Input placeholder="Enter your username" className="bg-white text-black" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )} />
-                  <FormField control={form.control} name="username" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Password</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="password" placeholder="Enter your password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Email</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="email" placeholder="Enter your email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="geolocation" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Geolocation</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your geolocation" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit">Sign Up</Button>
-                </form>
-              </Form>
-              <p className="mt-4 text-center">
-                Already have an account?{" "}
-                <span onClick={toggleForm} className="text-blue-500 cursor-pointer hover:underline ml-1">Sign In</span>
-              </p>
-            </div>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  Recover Email
+                </Button>
+              </form>
+            </Form>
+            {infoMessage && <div className="mt-4 text-green-500 text-center">{infoMessage}</div>}
+            {error && <div className="mt-4 text-red-500 text-center">{error}</div>}
+            <Button onClick={() => setShowEmailRecovery(false)} className="mt-4 w-full bg-red-500">
+              Back to Login
+            </Button>
           </div>
-        )}
-        {/* Hide Login */}
-        {!isLogin && (
-          <div className={`${styles.welcomeContainer}  ${styles.roundedRight}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to</h1> 
-              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
-              <h1>Wardrobe Wizard</h1>
-          </div>
-        )}
-        
-
-        {/* Hide SignUp */}
-        {isLogin && (
-          <div className={`${styles.welcomeContainer} ${styles.roundedLeft}`}>
-              <h1 className="text-4xl font-bold mb-6">Welcome to </h1>
-              <img src="/assets/images/Vector.png" alt="App Logo" className={`${styles.loginLogo}`}/>
-              <h1 className="text-4xl font-bold mb-6">Wardrobe Wizard</h1> 
-          </div>
-        )}
-        {/* Login Form */}
-        {isLogin && (
-          <div className={`absolute w-full transition-transform duration-500 ${isLogin ? "translate-x-0" : "translate-x-full"}`}>
-            <div className={`${styles.formContainer} ${styles.roundedRight}`}>
-              <h2 className="text-xl font-bold mb-6">Login</h2>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField control={form.control} name="username" render={({ field }) => (
+        ) : showForgotPassword ? (
+          <div className="w-full bg-[#73628A] p-6 rounded-lg">
+            <h2 className="text-2xl font-bold text-white mb-3">Forgot Password</h2>
+            <Form {...forgotPasswordForm}>
+              <form onSubmit={forgotPasswordForm.handleSubmit(forgotPassword)} className="space-y-3">
+                <FormField
+                  control={forgotPasswordForm.control}
+                  name="email"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={styles.labels}>Username</FormLabel>
+                      <FormLabel className="text-white">Email</FormLabel>
                       <FormControl>
-                        <Input className={styles.inputField} placeholder="Enter your username" {...field} />
+                        <Input placeholder="Enter your email" className="bg-white text-black" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )} />
-                  <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={styles.labels}>Password</FormLabel>
-                      <FormControl>
-                        <Input className={styles.inputField} type="password" placeholder="Enter your password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit">Sign In</Button>
-                </form>
-              </Form>
-              <p className="mt-4 text-center">
-                Don't have an account?{" "}
-                <span onClick={toggleForm} className="text-blue-500 cursor-pointer hover:underline ml-1">Sign Up</span>
-              </p>
-            </div>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  Reset Password
+                </Button>
+              </form>
+            </Form>
+            {infoMessage && <div className="mt-4 text-green-500 text-center">{infoMessage}</div>}
+            {error && <div className="mt-4 text-red-500 text-center">{error}</div>}
+            <Button onClick={() => setShowForgotPassword(false)} className="mt-4 w-full bg-red-500">
+              Back to Login
+            </Button>
           </div>
+        ) : (
+          // Existing Login/Sign-Up Form Here
+          <div>/* Your Existing Login/Sign-Up Code */</div>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default LoginPage;
