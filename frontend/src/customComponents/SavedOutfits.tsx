@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
+interface ClothingItem {
+  _id: string;
+  imagePath: string;
+  type: string;
+}
+
+interface Outfit {
+  _id: string;
+  items: string[];
+}
+
 const SavedOutfits = () => {
-  const [outfits, setOutfits] = useState([]);
-  const [allClothing, setAllClothing] = useState([]);
+  const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [allClothing, setAllClothing] = useState<ClothingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const API_ROOT = "https://api.wardrobewizard.fashion/api";
 
@@ -36,7 +47,11 @@ const SavedOutfits = () => {
         setOutfits(outfitsData);
         setAllClothing(clothingData);
       } catch (err) {
-        setError(err.message);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unexpected error occurred");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -45,9 +60,17 @@ const SavedOutfits = () => {
     fetchOutfitsAndClothing();
   }, []);
 
-  const getClothingItemById = (itemId) => {
+  const getClothingItemById = (itemId: string): ClothingItem | undefined => {
     return allClothing.find((item) => item._id === itemId);
   };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -67,7 +90,7 @@ const SavedOutfits = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-      {outfits.map((outfit, index) => (
+      {outfits.map((outfit: Outfit, index: number) => (
         <Card
           key={outfit._id}
           className="bg-[#FFF3BB] bg-opacity-80 border-none backdrop-blur-sm"
@@ -79,7 +102,7 @@ const SavedOutfits = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
-              {outfit.items.map((itemId) => {
+              {outfit.items.map((itemId: string) => {
                 const item = getClothingItemById(itemId);
                 return item ? (
                   <div
