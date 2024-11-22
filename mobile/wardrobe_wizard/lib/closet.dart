@@ -23,7 +23,7 @@ class _ClosetState extends State<Closet> {
   final ImagePicker _picker = ImagePicker();
   final List<Clothing> closetItems = [];
   final FlutterSecureStorage storage = const FlutterSecureStorage();
-  String selectedType = 'Sort By';
+  String selectedType = 'Sort By Type';
 
   Future<String?> getToken() async {
     return await storage.read(key: 'auth_token');
@@ -61,21 +61,17 @@ class _ClosetState extends State<Closet> {
     if (source != null) {
       final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
-        File compressedImage = await compressImage(File(image.path));
-        uploadImage(compressedImage);
+        uploadImage(File(image.path));
       }
     }
   }
 
-  Future<File> compressImage(File image) async {
-    final img.Image? rawImage = img.decodeImage(await image.readAsBytes());
-    final img.Image resizedImage = img.copyResize(rawImage!, width: 1024);
-    final File compressedImage = File(image.path)
-      ..writeAsBytesSync(img.encodeJpg(resizedImage, quality: 85));
-    return compressedImage;
-  }
-
   Future<void> uploadImage(File image) async {
+    const snackBar = SnackBar(
+      content: Text('Uploading image...'),
+      duration: Duration(days: 1), // Keep the SnackBar visible until dismissed
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
     final Uri uri =
         Uri.parse('https://api.wardrobewizard.fashion/api/clothing');
     final String? token = await getToken();
@@ -94,42 +90,32 @@ class _ClosetState extends State<Closet> {
 
       if (response.statusCode == 201) {
         final responseBody = await Response.fromStream(response);
-        debugPrint('Image uploaded successfully: ${responseBody.body}');
         setState(() {
           final Map<String, dynamic> json = jsonDecode(responseBody.body);
           Clothing newItem = Clothing.fromJson(json);
           closetItems.add(newItem);
+          debugPrint('New item: $newItem');
         });
-        debugPrint('Closet items: $closetItems');
+        debugPrint('Image uploaded successfully: ${responseBody.body}');
       } else {
         throw Exception(
             'Failed to upload image. Status: ${response.statusCode}');
       }
     } catch (error) {
       debugPrint('Error uploading image: $error');
-    }
-  }
-
-  void deleteImage(int index) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.delete),
-                title: const Text('Remove Item'),
-                onTap: () {
-                  setState(() {});
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: $error'),
+            backgroundColor: Colors.red,
           ),
         );
-      },
-    );
+      }
+    } finally {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+    }
   }
 
   Future<void> fetchCloset() async {
@@ -159,7 +145,7 @@ class _ClosetState extends State<Closet> {
   }
 
   List<Clothing> getFilteredItems() {
-    if (selectedType == 'Sort By') {
+    if (selectedType == 'Sort By Type') {
       return closetItems;
     } else {
       return closetItems
@@ -205,7 +191,7 @@ class _ClosetState extends State<Closet> {
                   });
                 },
                 items: <String>[
-                  'Sort By',
+                  'Sort By Type',
                   'Headwear',
                   'Top',
                   'Outerwear',
@@ -228,9 +214,8 @@ class _ClosetState extends State<Closet> {
                 itemBuilder: (BuildContext context, int index) {
                   final item = getFilteredItems()[index];
                   return GestureDetector(
-                    onLongPress: () => deleteImage(index),
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => Details(
@@ -239,21 +224,16 @@ class _ClosetState extends State<Closet> {
                           ),
                         ),
                       );
+                      if (result == true) {
+                        fetchCloset();
+                      }
                     },
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Image.network(
-                                item.imagePath,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            const SizedBox(height: 8.0),
-                            Text('Item ${index + 1}'),
-                          ],
+                        child: Image.network(
+                          item.imagePath,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

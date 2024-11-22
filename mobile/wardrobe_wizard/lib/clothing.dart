@@ -7,6 +7,7 @@ class Clothing {
   final String material;
   final String temperature;
   final String? description;
+  final String id;
 
   Clothing({
     required this.imagePath,
@@ -17,13 +18,14 @@ class Clothing {
     required this.material,
     required this.temperature,
     this.description,
+    required this.id,
   });
 
   @override
   String toString() {
     return 'Clothing item:{imagePath: $imagePath, type: $type, primaryColor: $primaryColor'
         'secondaryColor: $secondaryColor, otherColors: $otherColors, material: '
-        '$material, temperature: $temperature, description: $description}';
+        '$material, temperature: $temperature, description: $description, id: $id}';
   }
 
   static Clothing fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Clothing {
       material: json['material'],
       temperature: json['temperature'],
       description: json['description'],
+      id: json['_id'],
     );
   }
 }
