@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
@@ -20,7 +21,6 @@ class Closet extends StatefulWidget {
 
 class _ClosetState extends State<Closet> {
   final ImagePicker _picker = ImagePicker();
-  final List<XFile> images = [];
   final List<Clothing> closetItems = [];
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -90,9 +90,9 @@ class _ClosetState extends State<Closet> {
         debugPrint('Image uploaded successfully: ${responseBody.body}');
         //add a new clothing item to the list using the response data
         setState(() {
-          Clothing newItem = Clothing.fromJson(responseBody.body);
+          final Map<String, dynamic> json = jsonDecode(responseBody.body);
+          Clothing newItem = Clothing.fromJson(json);
           closetItems.add(newItem);
-          images.add(XFile(image.path));
         });
         debugPrint('Closet items: $closetItems');
       } else {
@@ -115,9 +115,7 @@ class _ClosetState extends State<Closet> {
                 leading: const Icon(Icons.delete),
                 title: const Text('Remove Item'),
                 onTap: () {
-                  setState(() {
-                    images.removeAt(index);
-                  });
+                  setState(() {});
                   Navigator.of(context).pop();
                 },
               ),
@@ -128,8 +126,34 @@ class _ClosetState extends State<Closet> {
     );
   }
 
+  Future<void> fetchCloset() async {
+    try {
+      Response response = await get(
+          Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
+          headers: <String, String>{
+            'Authorization': 'Bearer ${await getToken()}'
+          });
+      if (response.statusCode == 200) {
+        List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          closetItems.clear();
+          for (var item in data) {
+            closetItems.add(Clothing.fromJson(item));
+          }
+        });
+        debugPrint('Closet items: $closetItems');
+      } else {
+        throw Exception(
+            'Failed to fetch closet items. Status: ${response.statusCode}');
+      }
+    } catch (error) {
+      debugPrint('Error fetching closet items: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    fetchCloset();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,

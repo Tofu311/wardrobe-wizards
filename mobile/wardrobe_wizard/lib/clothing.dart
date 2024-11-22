@@ -28,8 +28,7 @@ class Clothing {
         '$material, temperature: $temperature, description: $description}';
   }
 
-  static Clothing fromJson(String body) {
-    final Map<String, dynamic> json = jsonDecode(body);
+  static Clothing fromJson(Map<String, dynamic> json) {
     return Clothing(
       imagePath: json['imagePath'],
       type: json['type'],
