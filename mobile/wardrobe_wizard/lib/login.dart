@@ -37,7 +37,7 @@ class _LoginPageState extends State<Login> {
       String token = jsonDecode(response.body)['token'];
 
       // Save the token securely
-      await storage.write(key: 'auth_token', value: token);      
+      await storage.write(key: 'auth_token', value: token);
       String? storedToken = await storage.read(key: 'auth_token');
       debugPrint('Token from storage: $storedToken');
       // Navigate to the home screen
@@ -46,10 +46,10 @@ class _LoginPageState extends State<Login> {
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
-      // Handle login error
+      String message = jsonDecode(response.body)['message'];
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login failed'),
+        SnackBar(
+          content: Text(message),
           backgroundColor: Colors.red,
         ),
       );

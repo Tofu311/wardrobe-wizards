@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class Clothing {
   final String imagePath;
   final String type;

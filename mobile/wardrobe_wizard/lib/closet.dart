@@ -88,7 +88,6 @@ class _ClosetState extends State<Closet> {
       if (response.statusCode == 201) {
         final responseBody = await Response.fromStream(response);
         debugPrint('Image uploaded successfully: ${responseBody.body}');
-        //add a new clothing item to the list using the response data
         setState(() {
           final Map<String, dynamic> json = jsonDecode(responseBody.body);
           Clothing newItem = Clothing.fromJson(json);
@@ -128,19 +127,20 @@ class _ClosetState extends State<Closet> {
 
   Future<void> fetchCloset() async {
     try {
-      Response response = await get(
-          Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
-          headers: <String, String>{
-            'Authorization': 'Bearer ${await getToken()}'
-          });
+      final response = await get(
+        Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
+        headers: <String, String>{
+          'Authorization': 'Bearer ${await getToken()}'
+        },
+      );
       if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          closetItems.clear();
-          for (var item in data) {
-            closetItems.add(Clothing.fromJson(item));
-          }
-        });
+        List<dynamic> data = jsonDecode(response.body);        
+          setState(() {
+            closetItems.clear();
+            for (var item in data) {
+              closetItems.add(Clothing.fromJson(item));
+            }
+          });        
         debugPrint('Closet items: $closetItems');
       } else {
         throw Exception(
