@@ -26,7 +26,7 @@ export default function Outfits() {
   useEffect(() => {
     const token = window.localStorage.getItem("token");
 
-    const handleFetch = (clothingType) => {
+    const handleFetch = (clothingType: string) => {
       return fetch(`${API_ROOT}/clothing?clothingType=${clothingType}`, {
         method: "GET",
         headers: {
@@ -72,35 +72,35 @@ export default function Outfits() {
         ]) => {
           // Map _id to id and add clothingType to each item
           setHeadwears(
-            headwearsData.map((item) => ({
+            headwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "headwear",
             }))
           );
           setOuterwears(
-            outerwearsData.map((item) => ({
+            outerwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "outerwear",
             }))
           );
           setTops(
-            topsData.map((item) => ({
+            topsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "top",
             }))
           );
           setBottoms(
-            bottomsData.map((item) => ({
+            bottomsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "bottom",
             }))
           );
           setFootwears(
-            footwearsData.map((item) => ({
+            footwearsData.map((item: { _id: string }) => ({
               ...item,
               id: item._id,
               clothingType: "footwear",
