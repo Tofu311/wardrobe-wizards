@@ -23,9 +23,16 @@ class _ClosetState extends State<Closet> {
   final ImagePicker _picker = ImagePicker();
   final List<Clothing> closetItems = [];
   final FlutterSecureStorage storage = const FlutterSecureStorage();
+  String selectedType = 'Sort By';
 
   Future<String?> getToken() async {
     return await storage.read(key: 'auth_token');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCloset();
   }
 
   Future<void> getImage() async {
@@ -151,9 +158,18 @@ class _ClosetState extends State<Closet> {
     }
   }
 
+  List<Clothing> getFilteredItems() {
+    if (selectedType == 'Sort By') {
+      return closetItems;
+    } else {
+      return closetItems
+          .where((item) => item.type == selectedType.toUpperCase())
+          .toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    fetchCloset();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -182,14 +198,19 @@ class _ClosetState extends State<Closet> {
             Padding(
               padding: const EdgeInsets.all(12),
               child: DropdownButton<String>(
-                value: 'Sort By',
-                onChanged: (String? newValue) {},
+                value: selectedType,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedType = newValue!;
+                  });
+                },
                 items: <String>[
                   'Sort By',
-                  'Tops',
-                  'Bottoms',
-                  'Jackets',
-                  'Shoes'
+                  'Headwear',
+                  'Top',
+                  'Outerwear',
+                  'Bottom',
+                  'Footwear'
                 ].map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -203,8 +224,9 @@ class _ClosetState extends State<Closet> {
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                 ),
-                itemCount: closetItems.length,
+                itemCount: getFilteredItems().length,
                 itemBuilder: (BuildContext context, int index) {
+                  final item = getFilteredItems()[index];
                   return GestureDetector(
                     onLongPress: () => deleteImage(index),
                     onTap: () {
@@ -213,16 +235,26 @@ class _ClosetState extends State<Closet> {
                         MaterialPageRoute(
                           builder: (context) => Details(
                             title: 'Details',
-                            clothing: closetItems[index],
+                            clothing: item,
                           ),
                         ),
                       );
                     },
                     child: Card(
-                      color: const Color(0xffd6cea7),
-                      child: Image.network(
-                        closetItems[index].imagePath,
-                        fit: BoxFit.contain,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Image.network(
+                                item.imagePath,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 8.0),
+                            Text('Item ${index + 1}'),
+                          ],
+                        ),
                       ),
                     ),
                   );
