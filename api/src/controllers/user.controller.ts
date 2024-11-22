@@ -200,7 +200,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
                 <div style="text-align: center; font-family: Arial, sans-serif;">
                     <h1>Email Verification Failed</h1>
                     <p>User not found.</p>
-                    <a href="https://wardrobewizard.fashion/login" style="
+                    <a href="https://wardrobewizard.fashion" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: purple;
@@ -219,7 +219,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
                 <div style="text-align: center; font-family: Arial, sans-serif;">
                     <h1>Email Already Verified</h1>
                     <p>Your email has already been verified.</p>
-                    <a href="https://wardrobewizard.fashion/login" style="
+                    <a href="https://wardrobewizard.fashion" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: purple;
@@ -240,7 +240,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
             <div style="text-align: center; font-family: Arial, sans-serif;">
                 <h1>Email Verified Successfully</h1>
                 <p>Thank you for verifying your email. You can now log in.</p>
-                <a href="https://wardrobewizard.fashion/login" style="
+                <a href="https://wardrobewizard.fashion" style="
                     display: inline-block;
                     padding: 10px 20px;
                     background-color: purple;
@@ -257,7 +257,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
             <div style="text-align: center; font-family: Arial, sans-serif;">
                 <h1>Email Verification Failed</h1>
                 <p>The verification link is invalid or has expired.</p>
-                <a href="https://wardrobewizard.fashion/login" style="
+                <a href="https://wardrobewizard.fashion" style="
                     display: inline-block;
                     padding: 10px 20px;
                     background-color: purple;
