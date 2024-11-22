@@ -1,5 +1,5 @@
 # Use an official Node runtime as a parent image
-FROM node:18
+FROM node:18 AS build
 
 # Set working directory
 WORKDIR /app
@@ -16,7 +16,15 @@ RUN npm run build
 
 # Use nginx to serve the build folder
 FROM nginx:alpine
-COPY --from=0 /app/dist /usr/share/nginx/html
+
+# Remove default nginx configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx configuration
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy the build output to nginx's html directory
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Expose the port the app runs on
 EXPOSE 80
