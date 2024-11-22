@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import WheelCarousel from "../customComponents/WheelCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
 const API_ROOT = "https://api.wardrobewizard.fashion/api"; // prod
@@ -20,45 +21,46 @@ export default function Outfits() {
   const [bottoms, setBottoms] = useState([]);
   const [footwears, setFootwears] = useState([]);
 
-  // Fetch clothing items and include the clothingType in each item
+  const navigate = useNavigate();
+
   useEffect(() => {
     const token = window.localStorage.getItem("token");
 
+    const handleFetch = (clothingType) => {
+      return fetch(`${API_ROOT}/clothing?clothingType=${clothingType}`, {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+      })
+        .then((response) => {
+          if (response.status === 401) {
+            navigate("/");
+            throw new Error("Unauthorized");
+          }
+          return response.json();
+        })
+        .catch((error) => {
+          if (
+            error instanceof TypeError &&
+            error.message === "Failed to fetch"
+          ) {
+            // Likely a CORS error due to unauthorized access
+            navigate("/");
+            throw new Error("CORS error or network issue");
+          } else {
+            // Handle other types of errors if necessary
+            throw error;
+          }
+        });
+    };
+
     Promise.all([
-      fetch(`${API_ROOT}/clothing?clothingType=HEADWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=OUTERWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=TOP`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=BOTTOM`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
-
-      fetch(`${API_ROOT}/clothing?clothingType=FOOTWEAR`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      }).then((response) => response.json()),
+      handleFetch("HEADWEAR"),
+      handleFetch("OUTERWEAR"),
+      handleFetch("TOP"),
+      handleFetch("BOTTOM"),
+      handleFetch("FOOTWEAR"),
     ])
       .then(
         ([
@@ -70,35 +72,35 @@ export default function Outfits() {
         ]) => {
           // Map _id to id and add clothingType to each item
           setHeadwears(
-            headwearsData.map((item: { _id: string }) => ({
+            headwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "headwear",
             }))
           );
           setOuterwears(
-            outerwearsData.map((item: { _id: string }) => ({
+            outerwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "outerwear",
             }))
           );
           setTops(
-            topsData.map((item: { _id: string }) => ({
+            topsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "top",
             }))
           );
           setBottoms(
-            bottomsData.map((item: { _id: string }) => ({
+            bottomsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "bottom",
             }))
           );
           setFootwears(
-            footwearsData.map((item: { _id: string }) => ({
+            footwearsData.map((item) => ({
               ...item,
               id: item._id,
               clothingType: "footwear",

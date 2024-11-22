@@ -89,11 +89,23 @@ export default function UserCloset() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+
+      if (response.status === 401) {
+        navigate("/");
+        throw new Error("Unauthorized");
+      }
+
       const data = await response.json();
       setClothes(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching clothing:", error);
-      setError("Failed to fetch clothing items. Please try again.");
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        // Likely a CORS error due to unauthorized access
+        navigate("/");
+        throw new Error("CORS error or network issue");
+      } else {
+        console.error("Error fetching clothing:", error);
+        setError("Failed to fetch clothing items. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
