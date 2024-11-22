@@ -32,29 +32,25 @@ class _DetailsState extends State<Details> {
           'Authorization': 'Bearer $token',
         },
       );
-      debugPrint('ID: $clothingId');
       if (response.statusCode == 200) {
-        debugPrint('Item deleted successfully');
         if (mounted) {
           Navigator.pop(context, true);
         }
       } else {
-        debugPrint('Failed to delete item. Status: ${response.statusCode}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to delete item. Please try again.'),
+            SnackBar(
+              content: Text('Failed to delete item. ${response.statusCode}'),
               backgroundColor: Colors.red,
             ),
           );
         }
       }
     } catch (error) {
-      debugPrint('Error deleting item: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error deleting item. Please try again.'),
+          SnackBar(
+            content: Text('Error deleting item. $error'),
             backgroundColor: Colors.red,
           ),
         );
@@ -74,18 +70,34 @@ class _DetailsState extends State<Details> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(clothing.type),
+            Text(
+              clothing.type,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             Text("Color: ${clothing.primaryColor}"),
             Text("Material: ${clothing.material}"),
-            Image.network(clothing.imagePath),
-            Text(clothing.description ?? ''),
-            ElevatedButton(
-              onPressed: deleteItem,
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(Colors.red),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+            SizedBox(
+              width: 350,
+              height: 350,
+              child: Image.network(clothing.imagePath),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                clothing.description ?? '',
+                textAlign: TextAlign.center,
               ),
-              child: const Text("Delete"),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: ElevatedButton(
+                onPressed: deleteItem,
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.red),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                ),
+                child: const Text("Delete"),
+              ),
             )
           ],
         ),

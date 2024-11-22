@@ -38,8 +38,6 @@ class _LoginPageState extends State<Login> {
 
       // Save the token securely
       await storage.write(key: 'auth_token', value: token);
-      String? storedToken = await storage.read(key: 'auth_token');
-      debugPrint('Token from storage: $storedToken');
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

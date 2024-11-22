@@ -157,7 +157,6 @@ class _RegisterPageState extends State<Register> {
                       'password': userInfoControllers[4].text,
                       'email': userInfoControllers[3].text,
                     };
-                    debugPrint(userInfo.toString());
                     post(
                       Uri.parse(
                           'https://api.wardrobewizard.fashion/api/users/register'),
@@ -168,7 +167,6 @@ class _RegisterPageState extends State<Register> {
                     ).then(
                       (response) {
                         if (!context.mounted) return;
-                        debugPrint(response.headers.toString());
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text("User created successfully!"),

@@ -94,15 +94,12 @@ class _ClosetState extends State<Closet> {
           final Map<String, dynamic> json = jsonDecode(responseBody.body);
           Clothing newItem = Clothing.fromJson(json);
           closetItems.add(newItem);
-          debugPrint('New item: $newItem');
         });
-        debugPrint('Image uploaded successfully: ${responseBody.body}');
       } else {
         throw Exception(
             'Failed to upload image. Status: ${response.statusCode}');
       }
     } catch (error) {
-      debugPrint('Error uploading image: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -134,13 +131,19 @@ class _ClosetState extends State<Closet> {
             closetItems.add(Clothing.fromJson(item));
           }
         });
-        debugPrint('Closet items: $closetItems');
       } else {
         throw Exception(
             'Failed to fetch closet items. Status: ${response.statusCode}');
       }
     } catch (error) {
-      debugPrint('Error fetching closet items: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching closet items: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
