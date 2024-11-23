@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:wardrobe_wizard/clothing.dart';
@@ -27,12 +26,6 @@ class _ClosetState extends State<Closet> {
 
   Future<String?> getToken() async {
     return await storage.read(key: 'auth_token');
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchCloset();
   }
 
   Future<void> getImage() async {
@@ -155,6 +148,12 @@ class _ClosetState extends State<Closet> {
           .where((item) => item.type == selectedType.toUpperCase())
           .toList();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCloset();
   }
 
   @override

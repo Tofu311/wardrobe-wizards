@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wardrobe_wizard/create_outfit.dart';
 import 'package:wardrobe_wizard/login.dart';
 
 class Outfits extends StatefulWidget {
@@ -37,6 +38,19 @@ class _OutfitsState extends State<Outfits> {
             Text("Coming soon"),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return const CreateOutfit(title: 'New Outfit');
+              },
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
