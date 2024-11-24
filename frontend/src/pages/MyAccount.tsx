@@ -164,9 +164,9 @@ export default function MyAccount() {
   }, [form, toast]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#183642]">
+    <div className="flex flex-col min-h-screen bg-[url('/assets/images/star-background.jpeg')] bg-cover bg-center">
       {/* Navbar */}
-      <nav className="w-full bg-[#313D5A] p-2 flex justify-between items-center fixed top-0 left-0 z-50">
+      <nav className="shadow-md w-full bg-[#313D5A] p-2 flex justify-between items-center fixed top-0 left-0 z-50 border-b-2 border-[#183642]">
         <h1 className="text-[#CBC5EA] text-2xl font-bold ml-4">
           Wardrobe Wizard
         </h1>
@@ -198,10 +198,10 @@ export default function MyAccount() {
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-4 pt-20">
-        <Card className="w-full max-w-2xl bg-white">
+        <Card className="shadow-md text-[#CBC5EA] w-full max-w-2xl bg-[#313D5A] border border-[#183642]">
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-white">
               View or update your personal information
             </CardDescription>
           </CardHeader>
@@ -209,20 +209,20 @@ export default function MyAccount() {
             {!isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium">First Name</h3>
-                  <p className="text-sm text-gray-500">{userInfo.firstName}</p>
+                  <h3 className="text-lg font-medium mb-2">First Name</h3>
+                  <p className="border border-[#183642] text-sm text-white rounded-lg shadow-md p-2 w-1/2 bg-[#CBC5EA] bg-opacity-20">{userInfo.firstName}</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">Last Name</h3>
-                  <p className="text-sm text-gray-500">{userInfo.lastName}</p>
+                  <h3 className="text-lg font-medium mb-2">Last Name</h3>
+                  <p className="border border-[#183642] text-sm text-white rounded-lg shadow-md p-2 w-1/2 bg-[#CBC5EA] bg-opacity-20">{userInfo.lastName}</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">Username</h3>
-                  <p className="text-sm text-gray-500">{userInfo.username}</p>
+                  <h3 className="text-lg font-medium mb-2">Username</h3>
+                  <p className="border border-[#183642] text-sm text-white rounded-lg shadow-md p-2 w-1/2 bg-[#CBC5EA] bg-opacity-20">{userInfo.username}</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">Email</h3>
-                  <p className="text-sm text-gray-500">{userInfo.email}</p>
+                  <h3 className="text-lg font-medium mb-2">Email</h3>
+                  <p className="border border-[#183642] text-sm text-white rounded-lg shadow-md p-2 w-1/2 bg-[#CBC5EA] bg-opacity-20">{userInfo.email}</p>
                 </div>
                 <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
               </div>
