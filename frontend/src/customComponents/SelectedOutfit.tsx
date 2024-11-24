@@ -3,10 +3,26 @@ import React from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
-const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
+interface ClothingItem {
+  id: string;
+  clothingType: string;
+  imagePath: string;
+}
+
+interface SelectedOutfitProps {
+  selectedItems: Record<string, string | undefined>;
+  allItems: ClothingItem[];
+  clothingTypeEnabled: Record<string, boolean>;
+}
+
+const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
+  selectedItems,
+  allItems,
+  clothingTypeEnabled,
+}) => {
   const { toast } = useToast();
 
-  const findDefaultOrSelectedItem = (type, items) => {
+  const findDefaultOrSelectedItem = (type: string, items: ClothingItem[]) => {
     if (!clothingTypeEnabled[type]) {
       return null;
     }
