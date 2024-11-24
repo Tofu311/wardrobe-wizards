@@ -20,7 +20,9 @@ export default function Outfits() {
   const [bottoms, setBottoms] = useState([]);
   const [footwears, setFootwears] = useState([]);
 
-  const [selectedItems, setSelectedItems] = useState({
+  const [selectedItems, setSelectedItems] = useState<
+    Record<string, string | undefined>
+  >({
     headwear: undefined,
     top: undefined,
     outerwear: undefined,
@@ -28,7 +30,9 @@ export default function Outfits() {
     footwear: undefined,
   });
 
-  const [clothingTypeEnabled, setClothingTypeEnabled] = useState({
+  const [clothingTypeEnabled, setClothingTypeEnabled] = useState<
+    Record<string, boolean>
+  >({
     headwear: true,
     outerwear: true,
     top: true,

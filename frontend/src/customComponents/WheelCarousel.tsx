@@ -1,6 +1,5 @@
 import CarouselComponent from "./CarouselComponent";
 
-// Define item structure
 interface Item {
   id: string;
   imagePath: string;
@@ -12,12 +11,14 @@ interface WheelCarouselProps {
   outerwear: Item[];
   bottom: Item[];
   footwear: Item[];
-  selectedItems: {
-    [key: string]: string;
-  };
-  setSelectedItems: (selectedItems: { [key: string]: string }) => void;
-  clothingTypeEnabled: { [key: string]: boolean };
-  setClothingTypeEnabled: (state: { [key: string]: boolean }) => void;
+  selectedItems: Record<string, string | undefined>;
+  setSelectedItems: React.Dispatch<
+    React.SetStateAction<Record<string, string | undefined>>
+  >;
+  clothingTypeEnabled: Record<string, boolean>;
+  setClothingTypeEnabled: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 }
 
 export default function WheelCarousel({
@@ -54,37 +55,39 @@ export default function WheelCarousel({
   const renderCarousel = (
     type: string,
     items: Item[],
-    selectedItemId: string,
+    selectedItemId: string | undefined,
     onSelectItem: (id: string) => void
-  ) => (
-    <div>
-      <label className="flex items-center mb-2 text-white font-bold">
-        <input
-          type="checkbox"
-          checked={clothingTypeEnabled[type]}
-          onChange={(e) =>
-            setClothingTypeEnabled((prev) => ({
-              ...prev,
-              [type]: e.target.checked,
-            }))
-          }
-          className="mr-2"
-        />
-        {type.charAt(0).toUpperCase() + type.slice(1)}
-      </label>
-      {clothingTypeEnabled[type] ? (
-        <CarouselComponent
-          items={items}
-          selectedItemId={selectedItemId}
-          onSelectItem={onSelectItem}
-        />
-      ) : (
-        <div className="mb-4 h-28 bg-white rounded-xl font-bold flex items-center justify-center">
-          {type.charAt(0).toUpperCase() + type.slice(1)} not included
-        </div>
-      )}
-    </div>
-  );
+  ) => {
+    return (
+      <div>
+        <label className="flex items-center mb-2 text-white font-bold">
+          <input
+            type="checkbox"
+            checked={clothingTypeEnabled[type]} // Ensure clothingTypeEnabled is accessible
+            onChange={(e) =>
+              setClothingTypeEnabled((prev) => ({
+                ...prev,
+                [type]: e.target.checked,
+              }))
+            }
+            className="mr-2"
+          />
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </label>
+        {clothingTypeEnabled[type] ? (
+          <CarouselComponent
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectItem={onSelectItem}
+          />
+        ) : (
+          <div className="mb-4 h-28 rounded-xl bg-white font-bold flex items-center justify-center">
+            {type.charAt(0).toUpperCase() + type.slice(1)} is not selected
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div>

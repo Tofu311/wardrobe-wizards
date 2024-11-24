@@ -1,14 +1,32 @@
-import { Button } from "@/components/ui/button";
 import React from "react";
 
-const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
-  const findDefaultOrSelectedItem = (type, items) => {
+interface ClothingItem {
+  id: string;
+  clothingType: string;
+  imagePath: string;
+}
+
+interface SelectedOutfitProps {
+  selectedItems: Record<string, string | undefined>;
+  allItems: ClothingItem[];
+  clothingTypeEnabled: Record<string, boolean>;
+}
+
+const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
+  selectedItems,
+  allItems,
+  clothingTypeEnabled,
+}) => {
+  const findDefaultOrSelectedItem = (
+    type: string,
+    items: ClothingItem[]
+  ): ClothingItem | null => {
     if (!clothingTypeEnabled[type]) {
       return null;
     }
     const itemId = selectedItems[type];
     if (itemId) {
-      return items.find((item) => item.id === itemId);
+      return items.find((item) => item.id === itemId) || null;
     }
     return items[0] || null;
   };
@@ -66,9 +84,12 @@ const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
   return (
     <div className="flex flex-col items-center justify-start h-screen pt-12 px-8 bg-[#FEFFF3]">
       <div className="flex justify-end w-full mb-4 mt-4">
-        <Button variant="outline" onClick={handleSaveOutfit}>
+        <button
+          className="border border-gray-500 px-4 py-2 rounded"
+          onClick={handleSaveOutfit}
+        >
           Save Outfit
-        </Button>
+        </button>
       </div>
       {selectedHeadwear && (
         <div className="h-28 mb-2">
