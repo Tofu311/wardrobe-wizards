@@ -63,6 +63,7 @@ export default function UserCloset() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ClothingItem | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -145,16 +146,19 @@ export default function UserCloset() {
         const newItem = await response.json();
         setClothes((prevClothes) => [...prevClothes, newItem]);
         setSelectedFile(null);
+
+        setIsSheetOpen(false);
       } 
-      else if (response.status === 401) {
-        navigate("/");
-        throw new Error("Unauthorized");
+      else if (response.status === 417) {
+        setError("File exceeds 50MB. Please upload a smaller image.");
+        throw new Error("File exceeds 50MB");
       }
       else {
         setError("Failed to add clothing item");
         throw new Error("Failed to add clothing item");
       }
     } catch (error) {
+      setError("Error uploading image");
       console.error("Error uploading image:", error);
     } finally {
       setIsUploading(false);
@@ -450,16 +454,20 @@ export default function UserCloset() {
                 </div>
               </div>
               <div className="mt-auto">
-                <Sheet>
+                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                   <SheetTrigger asChild>
-                    <Button className="w-full border-2 border-[#313D5A] bg-[#183642] hover:bg-[#313D5A]">
+                    <Button 
+                      className="w-full border-2 border-[#313D5A] bg-[#183642] hover:bg-[#313D5A]"
+                      onClick={() => setIsSheetOpen(true)}>
                       <PlusCircle className="mr-2 h-4 w-4"/> Add Clothing
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="bg-[#183642]">
                     <SheetHeader className="mb-4">
                       <SheetTitle className="text-[#CBC5EA] mb-4">
+                        <div className="bg-[#313D5A] w-full h-full">
                         Add New Clothing
+                        </div>
                       </SheetTitle>
                       <SheetDescription className="text-white">
                         Upload an image of your clothing item

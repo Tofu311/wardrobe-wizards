@@ -7,10 +7,6 @@ interface ClothingItem {
   imagePath: string;
 }
 
-interface SelectedItems {
-  [key: string]: string; // Maps clothing types (e.g., "headwear") to item IDs
-}
-
 interface SelectedOutfitProps {
   selectedItems: Record<string, string | undefined>;
   allItems: ClothingItem[];
@@ -105,6 +101,7 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
             />
           </svg>
           Save Outfit
+        </Button>
       </div>
       {selectedHeadwear && (
         <div className="h-28 mb-2">
