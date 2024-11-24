@@ -1,5 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 interface ClothingItem {
   id: string;
@@ -18,6 +20,8 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
   allItems,
   clothingTypeEnabled,
 }) => {
+  const { toast } = useToast();
+
   const findDefaultOrSelectedItem = (
     type: string,
     items: ClothingItem[]
@@ -70,10 +74,19 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        alert("Outfit saved successfully!");
+        toast({
+          title: "Success!",
+          description: "Your outfit has been saved.",
+          duration: 3000,
+        });
         console.log("Save result:", result);
       } else {
-        alert("Failed to save outfit. Please try again.");
+        toast({
+          title: "Uh oh! Something went wrong",
+          description: "We weren't able to save your outfit.",
+          variant: "destructive",
+          duration: 3000,
+        });
         console.error("Save error:", response.statusText);
       }
     } catch (error) {
@@ -159,6 +172,7 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
           />
         </div>
       )}
+      <Toaster />
     </div>
   );
 };
