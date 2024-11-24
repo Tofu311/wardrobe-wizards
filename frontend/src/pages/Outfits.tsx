@@ -14,6 +14,7 @@ interface ClothingMap {
 
 export default function Outfits() {
   const [prompt, setPrompt] = useState("");
+  const [selectedItems, setSelectedItems] = useState({});
   const [headwears, setHeadwears] = useState([]);
   const [outerwears, setOuterwears] = useState([]);
   const [tops, setTops] = useState([]);
@@ -190,26 +191,6 @@ export default function Outfits() {
 
       // Update the selectedItems state
       setSelectedItems(newSelectedItems);
-
-      // Update clothingTypeEnabled based on the generated outfit
-      setClothingTypeEnabled((prevClothingTypeEnabled) => {
-        const allClothingTypes = [
-          "headwear",
-          "outerwear",
-          "top",
-          "bottom",
-          "footwear",
-        ];
-        const newClothingTypeEnabled = { ...prevClothingTypeEnabled };
-        allClothingTypes.forEach((type) => {
-          if (newSelectedItems[type]) {
-            newClothingTypeEnabled[type] = true;
-          } else {
-            newClothingTypeEnabled[type] = false;
-          }
-        });
-        return newClothingTypeEnabled;
-      });
     } catch (error) {
       console.error("Error generating outfit:", error);
     }
@@ -285,9 +266,6 @@ export default function Outfits() {
             bottom={bottoms}
             footwear={footwears}
             selectedItems={selectedItems}
-            setSelectedItems={setSelectedItems}
-            clothingTypeEnabled={clothingTypeEnabled}
-            setClothingTypeEnabled={setClothingTypeEnabled}
           />
         </div>
       </div>
@@ -301,7 +279,6 @@ export default function Outfits() {
             ...bottoms,
             ...footwears,
           ]}
-          clothingTypeEnabled={clothingTypeEnabled}
         />
       </div>
     </div>

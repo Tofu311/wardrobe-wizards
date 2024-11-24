@@ -385,7 +385,7 @@ function LoginPage() {
                 </form>
               </Form>
               {error && (
-                <div className="mt-4 text-red-500 text-center">{error}</div>
+                <div className="mt-4 text-yellow-500 text-center">{error}</div>
               )}
               <p className="mt-4 text-center text-white">
                 Already have an account?{" "}
@@ -418,9 +418,9 @@ function LoginPage() {
               <img
                 src="/assets/images/Vector.png"
                 alt="App Logo"
-                className="w-[70%] h-auto"
+                className="w-[80%] h-auto"
               />
-              <h1 className="text-4xl font-bold text-black">Wardrobe Wizard</h1>
+              <h1 className="text-4xl font-bold text-black flex flex-col items-center">Wardrobe Wizard</h1>
             </div>
             <div className="w-[50%] bg-[#73628A] p-6 min-h-[500px] rounded-r-lg">
               <h2 className="text-2xl font-bold text-white mb-6">Login</h2>
@@ -489,8 +489,9 @@ function LoginPage() {
                   </Button>
                 </form>
               </Form>
+              {/* error div */}
               {error && (
-                <div className="mt-4 text-red-500 text-center">{error}</div>
+                <div className="mt-4 text-yellow-500 text-center font-bold">{error}</div>
               )}
               {recoverySuccess && (
                 <div className="mt-4 text-green-500 text-center">
@@ -602,15 +603,20 @@ function LoginPage() {
               ) : (
                 <AlertDialogFooter>
                   <AlertDialogCancel
-                    onClick={() => {
-                      setShowEmailRecovery(false);
-                      setError("");
-                      emailRecoveryForm.reset();
-                    }}
+                  onClick={() => {
+                    setShowEmailRecovery(false);
+                    setError("");
+                    emailRecoveryForm.reset();
+                  }}
                   >
-                    Cancel
+                  Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction type="submit">
+                  <AlertDialogAction type="submit"
+                  onClick={(e) => {
+                    // Prevents closing 
+                    e.preventDefault();
+                    emailRecoveryForm.handleSubmit(recoverEmail)();
+                  }}>
                     Recover Email
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -618,7 +624,7 @@ function LoginPage() {
             </form>
           </Form>
           {error && (
-            <div className="mt-4 text-red-500 text-center">{error}</div>
+            <div className="mt-4 text-yellow-500 text-center">{error}</div>
           )}
           {recoveredEmail && (
             <AlertDialogFooter>

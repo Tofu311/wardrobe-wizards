@@ -1,3 +1,4 @@
+// WheelCarousel.tsx
 import CarouselComponent from "./CarouselComponent";
 
 interface Item {
@@ -5,6 +6,7 @@ interface Item {
   imagePath: string;
 }
 
+// Define props structure
 interface WheelCarouselProps {
   headwear: Item[];
   top: Item[];
