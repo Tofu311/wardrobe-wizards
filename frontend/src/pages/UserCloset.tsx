@@ -145,7 +145,13 @@ export default function UserCloset() {
         const newItem = await response.json();
         setClothes((prevClothes) => [...prevClothes, newItem]);
         setSelectedFile(null);
-      } else {
+      } 
+      else if (response.status === 401) {
+        navigate("/");
+        throw new Error("Unauthorized");
+      }
+      else {
+        setError("Failed to add clothing item");
         throw new Error("Failed to add clothing item");
       }
     } catch (error) {
@@ -290,13 +296,14 @@ export default function UserCloset() {
                   variant={
                     filter.includes("all") ? "default_closet" : "outline_closet"
                   }
-                  className="mb-2 w-full justify-start"
+                  className="border-b-2 border-[#183642] mb-2 w-full justify-start"
                   onClick={() => setFilter(["all"])}
                 >
                   All
                 </Button>
 
                 {/* Scrollable Filters */}
+                <div className="border-b-4 border-[#183642]"></div>
                 <div className="overflow-y-auto">
                   <Accordion type="multiple" className="w-full">
                     <AccordionItem value="types">
@@ -446,7 +453,7 @@ export default function UserCloset() {
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button className="w-full border-2 border-[#313D5A] bg-[#183642] hover:bg-[#313D5A]">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Clothing
+                      <PlusCircle className="mr-2 h-4 w-4"/> Add Clothing
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="bg-[#183642]">
@@ -482,6 +489,7 @@ export default function UserCloset() {
                         {isUploading ? "Uploading..." : "Upload Image"}
                       </Button>
                       {isUploading && <p>Uploading...</p>}
+                      {error && isUploading && <p className="text-yellow-500">{error}</p>}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -507,7 +515,7 @@ export default function UserCloset() {
                     {filteredClothes.map((item) => (
                       <div
                         key={item._id}
-                        className="aspect-square bg-[#FFF3BB] bg-opacity-80 rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="aspect-square bg-[#CBC5EA] bg-opacity-80 rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => setSelectedItem(item)}
                       >
                         <div className="w-full h-full relative">
