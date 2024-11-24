@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import React from "react";
 
-const SelectedOutfit = ({ selectedItems, allItems }) => {
+const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
   const findDefaultOrSelectedItem = (type, items) => {
+    if (!clothingTypeEnabled[type]) {
+      return null;
+    }
     const itemId = selectedItems[type];
     if (itemId) {
       return items.find((item) => item.id === itemId);
@@ -26,11 +29,11 @@ const SelectedOutfit = ({ selectedItems, allItems }) => {
 
   const handleSaveOutfit = async () => {
     const selectedIds = [
-      selectedHeadwear?.id,
-      selectedOuterwear?.id,
-      selectedTop?.id,
-      selectedBottom?.id,
-      selectedFootwear?.id,
+      clothingTypeEnabled.headwear ? selectedHeadwear?.id : null,
+      clothingTypeEnabled.outerwear ? selectedOuterwear?.id : null,
+      clothingTypeEnabled.top ? selectedTop?.id : null,
+      clothingTypeEnabled.bottom ? selectedBottom?.id : null,
+      clothingTypeEnabled.footwear ? selectedFootwear?.id : null,
     ].filter(Boolean); // Remove any null/undefined values
 
     try {
@@ -90,7 +93,6 @@ const SelectedOutfit = ({ selectedItems, allItems }) => {
           />
         </div>
       )}
-
       <div className="flex justify-center gap-4 mb-2">
         {selectedOuterwear && (
           <div className="h-36">
@@ -111,7 +113,6 @@ const SelectedOutfit = ({ selectedItems, allItems }) => {
           </div>
         )}
       </div>
-
       {selectedBottom && (
         <div className="h-48 mb-2">
           <img
@@ -121,7 +122,6 @@ const SelectedOutfit = ({ selectedItems, allItems }) => {
           />
         </div>
       )}
-
       {selectedFootwear && (
         <div className="flex gap-4 h-24">
           <img

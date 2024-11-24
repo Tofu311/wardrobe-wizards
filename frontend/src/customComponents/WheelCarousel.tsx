@@ -1,4 +1,3 @@
-// WheelCarousel.tsx
 import CarouselComponent from "./CarouselComponent";
 
 // Define item structure
@@ -7,20 +6,18 @@ interface Item {
   imagePath: string;
 }
 
-// Define props structure
 interface WheelCarouselProps {
   headwear: Item[];
   top: Item[];
   outerwear: Item[];
   bottom: Item[];
   footwear: Item[];
-  selectedItems?: {
-    headwear?: string;
-    top?: string;
-    outerwear?: string;
-    bottom?: string;
-    footwear?: string;
+  selectedItems: {
+    [key: string]: string;
   };
+  setSelectedItems: (selectedItems: { [key: string]: string }) => void;
+  clothingTypeEnabled: { [key: string]: boolean };
+  setClothingTypeEnabled: (state: { [key: string]: boolean }) => void;
 }
 
 export default function WheelCarousel({
@@ -29,30 +26,93 @@ export default function WheelCarousel({
   outerwear,
   bottom,
   footwear,
-  selectedItems = {}, // Default to an empty object if not provided
+  selectedItems,
+  setSelectedItems,
+  clothingTypeEnabled,
+  setClothingTypeEnabled,
 }: WheelCarouselProps) {
-  // Default selected items structure
-  const defaultSelectedItems = {
-    headwear: undefined,
-    top: undefined,
-    outerwear: undefined,
-    bottom: undefined,
-    footwear: undefined,
+  const handleSelectHeadwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, headwear: selectedItemId }));
   };
 
-  // Merge defaultSelectedItems with the provided selectedItems
-  const selected = { ...defaultSelectedItems, ...selectedItems };
+  const handleSelectTop = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, top: selectedItemId }));
+  };
+
+  const handleSelectOuterwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, outerwear: selectedItemId }));
+  };
+
+  const handleSelectBottom = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, bottom: selectedItemId }));
+  };
+
+  const handleSelectFootwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, footwear: selectedItemId }));
+  };
+
+  const renderCarousel = (
+    type: string,
+    items: Item[],
+    selectedItemId: string,
+    onSelectItem: (id: string) => void
+  ) => (
+    <div>
+      <label className="flex items-center mb-2 text-white font-bold">
+        <input
+          type="checkbox"
+          checked={clothingTypeEnabled[type]}
+          onChange={(e) =>
+            setClothingTypeEnabled((prev) => ({
+              ...prev,
+              [type]: e.target.checked,
+            }))
+          }
+          className="mr-2"
+        />
+        {type.charAt(0).toUpperCase() + type.slice(1)}
+      </label>
+      {clothingTypeEnabled[type] ? (
+        <CarouselComponent
+          items={items}
+          selectedItemId={selectedItemId}
+          onSelectItem={onSelectItem}
+        />
+      ) : (
+        <div className="mb-4 h-28 bg-white rounded-xl font-bold flex items-center justify-center">
+          {type.charAt(0).toUpperCase() + type.slice(1)} not included
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div>
-      <CarouselComponent items={headwear} selectedItemId={selected.headwear} />
-      <CarouselComponent items={top} selectedItemId={selected.top} />
-      <CarouselComponent
-        items={outerwear}
-        selectedItemId={selected.outerwear}
-      />
-      <CarouselComponent items={bottom} selectedItemId={selected.bottom} />
-      <CarouselComponent items={footwear} selectedItemId={selected.footwear} />
+      {renderCarousel(
+        "headwear",
+        headwear,
+        selectedItems.headwear,
+        handleSelectHeadwear
+      )}
+      {renderCarousel("top", top, selectedItems.top, handleSelectTop)}
+      {renderCarousel(
+        "outerwear",
+        outerwear,
+        selectedItems.outerwear,
+        handleSelectOuterwear
+      )}
+      {renderCarousel(
+        "bottom",
+        bottom,
+        selectedItems.bottom,
+        handleSelectBottom
+      )}
+      {renderCarousel(
+        "footwear",
+        footwear,
+        selectedItems.footwear,
+        handleSelectFootwear
+      )}
     </div>
   );
 }

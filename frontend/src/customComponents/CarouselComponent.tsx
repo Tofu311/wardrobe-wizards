@@ -13,13 +13,15 @@ interface CarouselComponentProps {
   items: { id: string; imagePath: string }[];
   selectedItemId?: string;
   title?: string;
+  onSelectItem?: (selectedItemId: string) => void;
 }
 
 export default function CarouselComponent({
   items,
   selectedItemId,
+  onSelectItem,
 }: CarouselComponentProps) {
-  const apiRef = React.useRef<CarouselApi | null>(null);
+  const [api, setApi] = React.useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
 
   const displayedItems = React.useMemo(() => {
@@ -33,22 +35,27 @@ export default function CarouselComponent({
   }, [items]);
 
   React.useEffect(() => {
-    const api = apiRef.current;
     if (!api) return;
 
     const onSelect = () => {
       const newIndex = api.selectedScrollSnap();
       setSelectedIndex(newIndex);
+
+      if (onSelectItem) {
+        const selectedItem = displayedItems[newIndex];
+        if (selectedItem) {
+          onSelectItem(selectedItem.id);
+        }
+      }
     };
 
     api.on("select", onSelect);
     return () => {
       api.off("select", onSelect);
     };
-  }, []);
+  }, [api, onSelectItem, displayedItems]);
 
   React.useEffect(() => {
-    const api = apiRef.current;
     if (!api || !selectedItemId) return;
 
     const index = displayedItems.findIndex(
@@ -59,14 +66,14 @@ export default function CarouselComponent({
       api.scrollTo(index, false);
       setSelectedIndex(index);
     }
-  }, [selectedItemId, displayedItems]);
+  }, [api, selectedItemId, displayedItems]);
 
   return (
     <div className="mb-2">
       {displayedItems.length > 0 ? (
         <Carousel
-          setApi={(api) => {
-            apiRef.current = api;
+          setApi={(apiInstance) => {
+            setApi(apiInstance);
           }}
           opts={{
             align: "center",
