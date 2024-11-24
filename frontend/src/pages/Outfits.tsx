@@ -21,6 +21,26 @@ export default function Outfits() {
   const [bottoms, setBottoms] = useState([]);
   const [footwears, setFootwears] = useState([]);
 
+  const [selectedItems, setSelectedItems] = useState<
+    Record<string, string | undefined>
+  >({
+    headwear: undefined,
+    top: undefined,
+    outerwear: undefined,
+    bottom: undefined,
+    footwear: undefined,
+  });
+
+  const [clothingTypeEnabled, setClothingTypeEnabled] = useState<
+    Record<string, boolean>
+  >({
+    headwear: true,
+    outerwear: true,
+    top: true,
+    bottom: true,
+    footwear: true,
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {

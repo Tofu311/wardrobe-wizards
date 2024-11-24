@@ -3,12 +3,13 @@ import mongoose from 'mongoose';
 import { config } from './config';
 import userRoutes from './routes/user.route';
 import clothingRoutes from './routes/clothing.route';
+import bodyParser from 'body-parser';
 
 const app = express();
 // Rerun workflow comment
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.json({ limit: '50mb' })); // Increase the JSON payload limit
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); // For form data
 
 // Routes
 app.use('/api/users', userRoutes);

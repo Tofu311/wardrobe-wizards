@@ -1,7 +1,6 @@
 // WheelCarousel.tsx
 import CarouselComponent from "./CarouselComponent";
 
-// Define item structure
 interface Item {
   id: string;
   imagePath: string;
@@ -14,13 +13,14 @@ interface WheelCarouselProps {
   outerwear: Item[];
   bottom: Item[];
   footwear: Item[];
-  selectedItems?: {
-    headwear?: string;
-    top?: string;
-    outerwear?: string;
-    bottom?: string;
-    footwear?: string;
-  };
+  selectedItems: Record<string, string | undefined>;
+  setSelectedItems: React.Dispatch<
+    React.SetStateAction<Record<string, string | undefined>>
+  >;
+  clothingTypeEnabled: Record<string, boolean>;
+  setClothingTypeEnabled: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 }
 
 export default function WheelCarousel({
@@ -29,30 +29,95 @@ export default function WheelCarousel({
   outerwear,
   bottom,
   footwear,
-  selectedItems = {}, // Default to an empty object if not provided
+  selectedItems,
+  setSelectedItems,
+  clothingTypeEnabled,
+  setClothingTypeEnabled,
 }: WheelCarouselProps) {
-  // Default selected items structure
-  const defaultSelectedItems = {
-    headwear: undefined,
-    top: undefined,
-    outerwear: undefined,
-    bottom: undefined,
-    footwear: undefined,
+  const handleSelectHeadwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, headwear: selectedItemId }));
   };
 
-  // Merge defaultSelectedItems with the provided selectedItems
-  const selected = { ...defaultSelectedItems, ...selectedItems };
+  const handleSelectTop = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, top: selectedItemId }));
+  };
+
+  const handleSelectOuterwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, outerwear: selectedItemId }));
+  };
+
+  const handleSelectBottom = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, bottom: selectedItemId }));
+  };
+
+  const handleSelectFootwear = (selectedItemId: string) => {
+    setSelectedItems((prev) => ({ ...prev, footwear: selectedItemId }));
+  };
+
+  const renderCarousel = (
+    type: string,
+    items: Item[],
+    selectedItemId: string | undefined,
+    onSelectItem: (id: string) => void
+  ) => {
+    return (
+      <div>
+        <label className="flex items-center mb-2 text-white font-bold">
+          <input
+            type="checkbox"
+            checked={clothingTypeEnabled[type]} // Ensure clothingTypeEnabled is accessible
+            onChange={(e) =>
+              setClothingTypeEnabled((prev) => ({
+                ...prev,
+                [type]: e.target.checked,
+              }))
+            }
+            className="mr-2"
+          />
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </label>
+        {clothingTypeEnabled[type] ? (
+          <CarouselComponent
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectItem={onSelectItem}
+          />
+        ) : (
+          <div className="mb-4 h-28 rounded-xl bg-white font-bold flex items-center justify-center">
+            {type.charAt(0).toUpperCase() + type.slice(1)} is not selected
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div>
-      <CarouselComponent items={headwear} selectedItemId={selected.headwear} />
-      <CarouselComponent items={top} selectedItemId={selected.top} />
-      <CarouselComponent
-        items={outerwear}
-        selectedItemId={selected.outerwear}
-      />
-      <CarouselComponent items={bottom} selectedItemId={selected.bottom} />
-      <CarouselComponent items={footwear} selectedItemId={selected.footwear} />
+      {renderCarousel(
+        "headwear",
+        headwear,
+        selectedItems.headwear,
+        handleSelectHeadwear
+      )}
+      {renderCarousel("top", top, selectedItems.top, handleSelectTop)}
+      {renderCarousel(
+        "outerwear",
+        outerwear,
+        selectedItems.outerwear,
+        handleSelectOuterwear
+      )}
+      {renderCarousel(
+        "bottom",
+        bottom,
+        selectedItems.bottom,
+        handleSelectBottom
+      )}
+      {renderCarousel(
+        "footwear",
+        footwear,
+        selectedItems.footwear,
+        handleSelectFootwear
+      )}
     </div>
   );
 }
