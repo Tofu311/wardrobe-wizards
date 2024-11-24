@@ -45,6 +45,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { ClothingItem } from "@/types/types";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import SavedOutfits from "@/customComponents/SavedOutfits";
 
 // const API_ROOT = "http://localhost:3000/api"; // local
@@ -63,7 +65,9 @@ export default function UserCloset() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ClothingItem | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const switchTab = (tab: string) => {
@@ -145,11 +149,43 @@ export default function UserCloset() {
         const newItem = await response.json();
         setClothes((prevClothes) => [...prevClothes, newItem]);
         setSelectedFile(null);
+
+        setIsSheetOpen(false);
+        toast({
+          title: "Success",
+          description: "Clothing item added successfully",
+          duration: 3000,
+        });
+      } else if (response.status === 417) {
+        setError("File exceeds 50MB. Please upload a smaller image.");
+        setIsSheetOpen(false);
+        toast({
+          title: "Error",
+          description: "File exceeds 50MB. Please upload a smaller image.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        throw new Error("File exceeds 50MB");
       } else {
+        setError("Failed to add clothing item");
+        setIsSheetOpen(false);
+        toast({
+          title: "Error",
+          description: "Failed to add clothing item. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
         throw new Error("Failed to add clothing item");
       }
     } catch (error) {
+      setError("Error uploading image");
       console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
     } finally {
       setIsUploading(false);
     }
@@ -290,13 +326,14 @@ export default function UserCloset() {
                   variant={
                     filter.includes("all") ? "default_closet" : "outline_closet"
                   }
-                  className="mb-2 w-full justify-start"
+                  className="border-b-2 border-[#183642] mb-2 w-full justify-start"
                   onClick={() => setFilter(["all"])}
                 >
                   All
                 </Button>
 
                 {/* Scrollable Filters */}
+                <div className="border-b-4 border-[#183642]"></div>
                 <div className="overflow-y-auto">
                   <Accordion type="multiple" className="w-full">
                     <AccordionItem value="types">
@@ -443,16 +480,19 @@ export default function UserCloset() {
                 </div>
               </div>
               <div className="mt-auto">
-                <Sheet>
+                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                   <SheetTrigger asChild>
-                    <Button className="w-full border-2 border-[#313D5A] bg-[#183642] hover:bg-[#313D5A]">
+                    <Button
+                      className="w-full border-2 border-[#313D5A] bg-[#183642] hover:bg-[#313D5A]"
+                      onClick={() => setIsSheetOpen(true)}
+                    >
                       <PlusCircle className="mr-2 h-4 w-4" /> Add Clothing
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="bg-[#183642]">
                     <SheetHeader className="mb-4">
                       <SheetTitle className="text-[#CBC5EA] mb-4">
-                        Add New Clothing
+                        <div className="w-full h-full">Add New Clothing</div>
                       </SheetTitle>
                       <SheetDescription className="text-white">
                         Upload an image of your clothing item
@@ -482,6 +522,9 @@ export default function UserCloset() {
                         {isUploading ? "Uploading..." : "Upload Image"}
                       </Button>
                       {isUploading && <p>Uploading...</p>}
+                      {error && isUploading && (
+                        <p className="text-yellow-500">{error}</p>
+                      )}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -500,14 +543,18 @@ export default function UserCloset() {
                 </h1>
                 {isLoading ? (
                   <p className="p-4 text-white">Loading...</p>
-                ) : error ? (
+                ) : error &&
+                  error !== "Error uploading image" &&
+                  error !==
+                    "File exceeds 50MB. Please upload a smaller image." &&
+                  error !== "Failed to add clothing item" ? (
                   <p className="p-4 text-yellow-500">{error}</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
                     {filteredClothes.map((item) => (
                       <div
                         key={item._id}
-                        className="aspect-square bg-[#FFF3BB] bg-opacity-80 rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="aspect-square bg-[#CBC5EA] bg-opacity-80 rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => setSelectedItem(item)}
                       >
                         <div className="w-full h-full relative">
@@ -613,6 +660,8 @@ export default function UserCloset() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Toaster />
     </div>
   );
 }

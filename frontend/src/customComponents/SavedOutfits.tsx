@@ -131,7 +131,7 @@ const SavedOutfits = () => {
       {outfits.map((outfit: Outfit, index: number) => (
         <Card
           key={outfit._id}
-          className="bg-[#FFF3BB] bg-opacity-80 border-none backdrop-blur-sm relative"
+          className="bg-[#CBC5EA] bg-opacity-80 border-none backdrop-blur-sm relative"
         >
           <CardHeader>
             <CardTitle className="text-xl text-gray-800">
