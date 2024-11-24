@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import React from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
+  const { toast } = useToast();
+
   const findDefaultOrSelectedItem = (type, items) => {
     if (!clothingTypeEnabled[type]) {
       return null;
@@ -51,10 +55,21 @@ const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
 
       if (response.ok) {
         const result = await response.json();
-        alert("Outfit saved successfully!");
+        // alert("Outfit saved successfully!");
+        toast({
+          title: "Success!",
+          description: "Your outfit has been saved.",
+          duration: 3000,
+        });
         console.log("Save result:", result);
       } else {
-        alert("Failed to save outfit. Please try again.");
+        // alert("Failed to save outfit. Please try again.");
+        toast({
+          title: "Uh oh! Something went wrong",
+          description: "We weren't able to save your outfit.",
+          variant: "destructive",
+          duration: 3000,
+        });
         console.error("Save error:", response.statusText);
       }
     } catch (error) {
@@ -123,6 +138,7 @@ const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
           />
         </div>
       )}
+      <Toaster />
     </div>
   );
 };
