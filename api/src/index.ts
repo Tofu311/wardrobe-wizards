@@ -4,9 +4,15 @@ import { config } from './config';
 import userRoutes from './routes/user.route';
 import clothingRoutes from './routes/clothing.route';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 
 const app = express();
 // Rerun workflow comment
+
+app.use(cors({
+    origin: 'https://wardrobewizard.fashion',
+    credentials: true,
+  }));  
 
 app.use(bodyParser.json({ limit: '50mb' })); // Increase the JSON payload limit
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); // For form data
