@@ -1,14 +1,31 @@
 import { Button } from "@/components/ui/button";
-import React from "react";
 
-const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
-  const findDefaultOrSelectedItem = (type, items) => {
-    if (!clothingTypeEnabled[type]) {
-      return null;
-    }
+interface ClothingItem {
+  id: string;
+  clothingType: string;
+  imagePath: string;
+}
+
+interface SelectedItems {
+  [key: string]: string; // Maps clothing types (e.g., "headwear") to item IDs
+}
+
+interface SelectedOutfitProps {
+  selectedItems: SelectedItems;
+  allItems: ClothingItem[];
+}
+
+const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
+  selectedItems,
+  allItems,
+}) => {
+  const findDefaultOrSelectedItem = (
+    type: string,
+    items: ClothingItem[]
+  ): ClothingItem | null => {
     const itemId = selectedItems[type];
     if (itemId) {
-      return items.find((item) => item.id === itemId);
+      return items.find((item) => item.id === itemId) || null;
     }
     return items[0] || null;
   };
