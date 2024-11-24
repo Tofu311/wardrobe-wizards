@@ -1,31 +1,14 @@
 import { Button } from "@/components/ui/button";
+import React from "react";
 
-interface ClothingItem {
-  id: string;
-  clothingType: string;
-  imagePath: string;
-}
-
-interface SelectedItems {
-  [key: string]: string; // Maps clothing types (e.g., "headwear") to item IDs
-}
-
-interface SelectedOutfitProps {
-  selectedItems: SelectedItems;
-  allItems: ClothingItem[];
-}
-
-const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
-  selectedItems,
-  allItems,
-}) => {
-  const findDefaultOrSelectedItem = (
-    type: string,
-    items: ClothingItem[]
-  ): ClothingItem | null => {
+const SelectedOutfit = ({ selectedItems, allItems, clothingTypeEnabled }) => {
+  const findDefaultOrSelectedItem = (type, items) => {
+    if (!clothingTypeEnabled[type]) {
+      return null;
+    }
     const itemId = selectedItems[type];
     if (itemId) {
-      return items.find((item) => item.id === itemId) || null;
+      return items.find((item) => item.id === itemId);
     }
     return items[0] || null;
   };
@@ -46,11 +29,11 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
 
   const handleSaveOutfit = async () => {
     const selectedIds = [
-      selectedHeadwear?.id,
-      selectedOuterwear?.id,
-      selectedTop?.id,
-      selectedBottom?.id,
-      selectedFootwear?.id,
+      clothingTypeEnabled.headwear ? selectedHeadwear?.id : null,
+      clothingTypeEnabled.outerwear ? selectedOuterwear?.id : null,
+      clothingTypeEnabled.top ? selectedTop?.id : null,
+      clothingTypeEnabled.bottom ? selectedBottom?.id : null,
+      clothingTypeEnabled.footwear ? selectedFootwear?.id : null,
     ].filter(Boolean); // Remove any null/undefined values
 
     try {
@@ -84,20 +67,6 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
     <div className="flex flex-col items-center justify-start h-screen pt-12 px-8 bg-[#FEFFF3]">
       <div className="flex justify-end w-full mb-4 mt-4">
         <Button variant="outline" onClick={handleSaveOutfit}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="size-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 48.507 48.507 1 0 1 11.186 0Z"
-            />
-          </svg>
           Save Outfit
         </Button>
       </div>
@@ -110,7 +79,6 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
           />
         </div>
       )}
-
       <div className="flex justify-center gap-4 mb-2">
         {selectedOuterwear && (
           <div className="h-36">
@@ -131,7 +99,6 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
           </div>
         )}
       </div>
-
       {selectedBottom && (
         <div className="h-48 mb-2">
           <img
@@ -141,7 +108,6 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
           />
         </div>
       )}
-
       {selectedFootwear && (
         <div className="flex gap-4 h-24">
           <img
