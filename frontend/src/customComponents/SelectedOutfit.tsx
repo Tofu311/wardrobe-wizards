@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 
 interface ClothingItem {
@@ -11,18 +12,23 @@ interface SelectedItems {
 }
 
 interface SelectedOutfitProps {
-  selectedItems: SelectedItems;
+  selectedItems: Record<string, string | undefined>;
   allItems: ClothingItem[];
+  clothingTypeEnabled: Record<string, boolean>;
 }
 
 const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
   selectedItems,
   allItems,
+  clothingTypeEnabled,
 }) => {
   const findDefaultOrSelectedItem = (
     type: string,
     items: ClothingItem[]
   ): ClothingItem | null => {
+    if (!clothingTypeEnabled[type]) {
+      return null;
+    }
     const itemId = selectedItems[type];
     if (itemId) {
       return items.find((item) => item.id === itemId) || null;
@@ -99,7 +105,6 @@ const SelectedOutfit: React.FC<SelectedOutfitProps> = ({
             />
           </svg>
           Save Outfit
-        </Button>
       </div>
       {selectedHeadwear && (
         <div className="h-28 mb-2">
