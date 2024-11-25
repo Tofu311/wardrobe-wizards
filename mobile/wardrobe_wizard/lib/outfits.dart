@@ -198,8 +198,8 @@ class _OutfitsState extends State<Outfits> {
                     itemBuilder: (BuildContext context, int index) {
                       final outfitClothing = outfitsClothing[index];
                       return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) {
@@ -211,6 +211,9 @@ class _OutfitsState extends State<Outfits> {
                               },
                             ),
                           );
+                          if (result == true) {
+                            fetchOutfitsAndClothing();
+                          }
                         },
                         child: Card(
                           child: Column(
@@ -240,8 +243,8 @@ class _OutfitsState extends State<Outfits> {
                   ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) {
@@ -249,6 +252,9 @@ class _OutfitsState extends State<Outfits> {
               },
             ),
           );
+          if (result == true) {
+            fetchOutfitsAndClothing();
+          }
         },
         child: const Icon(Icons.add),
       ),

@@ -126,13 +126,7 @@ class _CreateOutfitState extends State<CreateOutfit> {
 
       if (response.statusCode == 201) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Success! Your outfit has been saved.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }
       } else {
         if (mounted) {
