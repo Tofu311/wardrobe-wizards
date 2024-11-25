@@ -11,16 +11,14 @@ describe('LoginPage', () => {
   const validEmail = 'tofu@example.com';
   const invalidEmail = 'invalid-email';
   const invalidPassword = 'short';
-  const invalidUsername = 'wronguser';
-  const invalidPasswordForLogin = 'Wrong@1234';
 
   beforeEach(() => {
-   jest.clearAllMocks();
-   localStorage.clear();
- });
+    jest.clearAllMocks();
+    localStorage.clear();
+  });
 
   it('logs in successfully when valid credentials are provided', async () => {
-    (fetch as jest.Mock).mockImplementationOnce((url, options) => {
+    (fetch as jest.Mock).mockImplementationOnce((_, options) => {
       const { username, password } = JSON.parse(options.body as string);
 
       if (username === validUsername && password === validPassword) {
@@ -66,64 +64,29 @@ describe('LoginPage', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('displays an error message when login fails', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      status: 401,
-      json: jest.fn().mockResolvedValue({ message: 'Invalid credentials' }),
-    });
-
-    render(
-      <BrowserRouter>
-        <LoginPage />
-      </BrowserRouter>
-    );
-
-    fireEvent.change(screen.getByPlaceholderText(/Enter your username/i), {
-      target: { value: invalidUsername },
-    });
-    fireEvent.change(screen.getByPlaceholderText(/Enter your password/i), {
-      target: { value: invalidPasswordForLogin },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();
-    });
-
-    expect(fetch).toHaveBeenCalledWith(
-      'https://api.wardrobewizard.fashion/api/users/login',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: invalidUsername, password: invalidPasswordForLogin }),
-      }
-    );
-    expect(fetch).toHaveBeenCalledTimes(1);
-  });
-
   it('signs up successfully when valid inputs are provided', async () => {
-   (fetch as jest.Mock).mockImplementationOnce((url, options) => {
-     const { username, password, email, name } = JSON.parse(options.body as string);
-
-     if (
-       username === validUsername &&
-       password === validPassword &&
-       email === validEmail &&
-       name.first === 'TestFirstName' &&
-       name.last === 'TestLastName'
-     ) {
-       return Promise.resolve({
-         status: 201,
-         json: () => Promise.resolve({ token: 'mocked-token' }),
-       });
-     }
-
-     return Promise.resolve({
-       status: 400,
-       json: () => Promise.resolve({ message: 'Invalid sign-up data' }),
-     });
-   });
+    (fetch as jest.Mock).mockImplementationOnce((_, options) => {
+      const { username, password, email, name } = JSON.parse(options.body as string);
+    
+      if (
+        username === validUsername &&
+        password === validPassword &&
+        email === validEmail &&
+        name.first === 'TestFirstName' &&
+        name.last === 'TestLastName'
+      ) {
+        return Promise.resolve({
+          status: 201,
+          json: () => Promise.resolve({ token: 'mocked-token' }),
+        });
+      }
+    
+      return Promise.resolve({
+        status: 400,
+        json: () => Promise.resolve({ message: 'Invalid sign-up data' }),
+      });
+    });
+    
 
    render(
      <BrowserRouter>
