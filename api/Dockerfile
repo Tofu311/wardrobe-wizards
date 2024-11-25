@@ -20,11 +20,17 @@ RUN npm run build
 # Use Nginx as the runtime environment
 FROM nginx:alpine
 
-# Remove default Nginx configuration
+# # Remove default Nginx configuration
+# RUN rm /etc/nginx/conf.d/default.conf
+
+# # Copy custom Nginx configuration
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Remove default nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration
+COPY api/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built Node.js app
 COPY --from=build /app /app
