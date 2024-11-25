@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:wardrobe_wizard/outfit.dart';
 import 'clothing.dart';
 import 'create_outfit.dart';
 import 'login.dart';
@@ -21,6 +22,9 @@ class _OutfitsState extends State<Outfits> {
   final List<Clothing> tops = [];
   final List<Clothing> bottoms = [];
   final List<Clothing> footwears = [];
+  final List<Outfit> outfits = [];
+  final List<Clothing> clothingItems = [];
+  String? error;
   bool isLoading = false;
 
   Future<String?> getToken() async {
@@ -30,7 +34,7 @@ class _OutfitsState extends State<Outfits> {
   @override
   void initState() {
     super.initState();
-    fetchClothingItems();
+    fetchOutfitsAndClothing();
   }
 
   Future<void> fetchClothingItems() async {
@@ -65,6 +69,62 @@ class _OutfitsState extends State<Outfits> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> fetchOutfitsAndClothing() async {
+    debugPrint('fetching outfits and clothing');
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    try {
+      final String? token = await getToken();
+      final responses = await Future.wait([
+        get(
+          Uri.parse('https://api.wardrobewizard.fashion/api/clothing/outfit'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+        get(
+          Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      ]);
+
+      final outfitsResponse = responses[0];
+      final clothingResponse = responses[1];
+
+      if (outfitsResponse.statusCode == 200 &&
+          clothingResponse.statusCode == 200) {
+        final outfitsData = jsonDecode(outfitsResponse.body) as List<dynamic>;
+        final clothingData = jsonDecode(clothingResponse.body) as List<dynamic>;
+
+        setState(() {
+          outfits.clear();
+          clothingItems.clear();
+          outfits.addAll(
+              outfitsData.map((item) => Outfit.fromJson(item)).toList());
+          clothingItems.addAll(
+              clothingData.map((item) => Clothing.fromJson(item)).toList());
+          isLoading = false;
+        });
+        debugPrint('Server response: ${outfitsResponse.body}');
+        debugPrint('Outfits: ${outfits.toString()}');
+      } else {
+        debugPrint(
+            'Failed to fetch data. Status: ${outfitsResponse.statusCode}');
+        throw Exception('Failed to fetch data');
+      }
+    } catch (err) {
+      setState(() {
+        isLoading = false;
+        error = err.toString();
+      });
+      debugPrint('Failed to fetch data. Status: $error');
     }
   }
 

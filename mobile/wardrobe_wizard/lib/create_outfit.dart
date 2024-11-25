@@ -49,14 +49,16 @@ class _CreateOutfitState extends State<CreateOutfit> {
       );
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          closetItems.clear();
-          for (var item in data) {
-            closetItems.add(Clothing.fromJson(item));
-          }
-          groupItems();
-          isLoading = false;
-        });
+        setState(
+          () {
+            closetItems.clear();
+            for (var item in data) {
+              closetItems.add(Clothing.fromJson(item));
+            }
+            groupItems();
+            isLoading = false;
+          },
+        );
       } else {
         setState(() => isLoading = false);
         throw Exception(
