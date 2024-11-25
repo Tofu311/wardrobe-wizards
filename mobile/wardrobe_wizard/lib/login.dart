@@ -35,8 +35,6 @@ class _LoginPageState extends State<Login> {
 
     if (response.statusCode == 200) {
       String token = jsonDecode(response.body)['token'];
-
-      // Save the token securely
       await storage.write(key: 'auth_token', value: token);
       if (!mounted) return;
       Navigator.pushReplacement(
