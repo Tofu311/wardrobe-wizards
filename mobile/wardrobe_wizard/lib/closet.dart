@@ -7,7 +7,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:wardrobe_wizard/clothing.dart';
-import 'package:wardrobe_wizard/details.dart';
+import 'package:wardrobe_wizard/clothing_details.dart';
 import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {

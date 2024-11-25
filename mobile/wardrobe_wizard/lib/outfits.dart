@@ -3,6 +3,7 @@ import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:wardrobe_wizard/outfit.dart';
+import 'package:wardrobe_wizard/outfit_details.dart';
 import 'clothing.dart';
 import 'create_outfit.dart';
 import 'login.dart';
@@ -196,27 +197,43 @@ class _OutfitsState extends State<Outfits> {
                     itemCount: outfits.length,
                     itemBuilder: (BuildContext context, int index) {
                       final outfitClothing = outfitsClothing[index];
-                      return Card(
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: GridView.builder(
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2),
-                                itemCount: outfitClothing.length,
-                                itemBuilder:
-                                    (BuildContext context, int clothingIndex) {
-                                  final clothing =
-                                      outfitClothing[clothingIndex];
-                                  return Image.network(
-                                    clothing.imagePath,
-                                    fit: BoxFit.contain,
-                                  );
-                                },
-                              ),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return OutfitDetails(
+                                  title: 'Outfit',
+                                  outfit: outfits[index],
+                                  clothingItems: outfitClothing,
+                                );
+                              },
                             ),
-                          ],
+                          );
+                        },
+                        child: Card(
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: GridView.builder(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2),
+                                  itemCount: outfitClothing.length,
+                                  itemBuilder: (BuildContext context,
+                                      int clothingIndex) {
+                                    final clothing =
+                                        outfitClothing[clothingIndex];
+                                    return Image.network(
+                                      clothing.imagePath,
+                                      fit: BoxFit.contain,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
