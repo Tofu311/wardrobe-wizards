@@ -24,7 +24,6 @@ class _OutfitsState extends State<Outfits> {
   final List<Clothing> bottoms = [];
   final List<Clothing> footwear = [];
   final List<Outfit> outfits = [];
-  final List<Clothing> clothingItems = [];
   final List<List<Clothing>> outfitsClothing = [];
   String? error;
   bool isLoading = false;
@@ -259,24 +258,5 @@ class _OutfitsState extends State<Outfits> {
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  Clothing getItemByIndex(int index) {
-    if (index < headwear.length) {
-      return headwear[index];
-    } else if (index < headwear.length + outerwear.length) {
-      return outerwear[index - headwear.length];
-    } else if (index < headwear.length + outerwear.length + tops.length) {
-      return tops[index - headwear.length - outerwear.length];
-    } else if (index <
-        headwear.length + outerwear.length + tops.length + bottoms.length) {
-      return bottoms[index - headwear.length - outerwear.length - tops.length];
-    } else {
-      return footwear[index -
-          headwear.length -
-          outerwear.length -
-          tops.length -
-          bottoms.length];
-    }
   }
 }
