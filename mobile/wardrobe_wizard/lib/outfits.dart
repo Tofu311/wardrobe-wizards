@@ -17,13 +17,14 @@ class Outfits extends StatefulWidget {
 
 class _OutfitsState extends State<Outfits> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
-  final List<Clothing> headwears = [];
-  final List<Clothing> outerwears = [];
+  final List<Clothing> headwear = [];
+  final List<Clothing> outerwear = [];
   final List<Clothing> tops = [];
   final List<Clothing> bottoms = [];
-  final List<Clothing> footwears = [];
+  final List<Clothing> footwear = [];
   final List<Outfit> outfits = [];
   final List<Clothing> clothingItems = [];
+  final List<List<Clothing>> outfitsClothing = [];
   String? error;
   bool isLoading = false;
 
@@ -50,17 +51,17 @@ class _OutfitsState extends State<Outfits> {
       ]);
 
       setState(() {
-        headwears.clear();
-        outerwears.clear();
+        headwear.clear();
+        outerwear.clear();
         tops.clear();
         bottoms.clear();
-        footwears.clear();
+        footwear.clear();
 
-        headwears.addAll(responses[0]);
-        outerwears.addAll(responses[1]);
+        headwear.addAll(responses[0]);
+        outerwear.addAll(responses[1]);
         tops.addAll(responses[2]);
         bottoms.addAll(responses[3]);
-        footwears.addAll(responses[4]);
+        footwear.addAll(responses[4]);
 
         isLoading = false;
       });
@@ -73,13 +74,15 @@ class _OutfitsState extends State<Outfits> {
   }
 
   Future<void> fetchOutfitsAndClothing() async {
-    debugPrint('fetching outfits and clothing');
     setState(() {
       isLoading = true;
       error = null;
     });
     try {
       final String? token = await getToken();
+      if (token == null) {
+        throw Exception('Token is null');
+      }
       final responses = await Future.wait([
         get(
           Uri.parse('https://api.wardrobewizard.fashion/api/clothing/outfit'),
@@ -103,16 +106,24 @@ class _OutfitsState extends State<Outfits> {
         final outfitsData = jsonDecode(outfitsResponse.body) as List<dynamic>;
         final clothingData = jsonDecode(clothingResponse.body) as List<dynamic>;
 
+        final List<Outfit> fetchedOutfits =
+            outfitsData.map((item) => Outfit.fromJson(item)).toList();
+        final List<Clothing> allClothing =
+            clothingData.map((item) => Clothing.fromJson(item)).toList();
+
+        final List<List<Clothing>> fetchedOutfitsClothing = await Future.wait(
+          fetchedOutfits
+              .map((outfit) => fetchClothingForOutfit(outfit, allClothing))
+              .toList(),
+        );
+
         setState(() {
           outfits.clear();
-          clothingItems.clear();
-          outfits.addAll(
-              outfitsData.map((item) => Outfit.fromJson(item)).toList());
-          clothingItems.addAll(
-              clothingData.map((item) => Clothing.fromJson(item)).toList());
+          outfitsClothing.clear();
+          outfits.addAll(fetchedOutfits);
+          outfitsClothing.addAll(fetchedOutfitsClothing);
           isLoading = false;
         });
-        debugPrint('Server response: ${outfitsResponse.body}');
         debugPrint('Outfits: ${outfits.toString()}');
       } else {
         debugPrint(
@@ -126,6 +137,13 @@ class _OutfitsState extends State<Outfits> {
       });
       debugPrint('Failed to fetch data. Status: $error');
     }
+  }
+
+  Future<List<Clothing>> fetchClothingForOutfit(
+      Outfit outfit, List<Clothing> allClothing) async {
+    return allClothing
+        .where((clothing) => outfit.itemIds.contains(clothing.id))
+        .toList();
   }
 
   Future<List<Clothing>> fetchClothingType(String type, String? token) async {
@@ -168,40 +186,41 @@ class _OutfitsState extends State<Outfits> {
       body: Center(
         child: isLoading
             ? const CircularProgressIndicator()
-            : GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                ),
-                itemCount: headwears.length +
-                    outerwears.length +
-                    tops.length +
-                    bottoms.length +
-                    footwears.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final item = getItemByIndex(index);
-                  return GestureDetector(
-                    onTap: () {
-                      // Handle item selection
-                    },
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Image.network(
-                              item.imagePath,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Item ${item.type}'),
-                          ),
-                        ],
-                      ),
+            : error != null
+                ? Text('Error: $error')
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
                     ),
-                  );
-                },
-              ),
+                    itemCount: outfits.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final outfitClothing = outfitsClothing[index];
+                      return Card(
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: GridView.builder(
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2),
+                                itemCount: outfitClothing.length,
+                                itemBuilder:
+                                    (BuildContext context, int clothingIndex) {
+                                  final clothing =
+                                      outfitClothing[clothingIndex];
+                                  return Image.network(
+                                    clothing.imagePath,
+                                    fit: BoxFit.contain,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -220,20 +239,19 @@ class _OutfitsState extends State<Outfits> {
   }
 
   Clothing getItemByIndex(int index) {
-    if (index < headwears.length) {
-      return headwears[index];
-    } else if (index < headwears.length + outerwears.length) {
-      return outerwears[index - headwears.length];
-    } else if (index < headwears.length + outerwears.length + tops.length) {
-      return tops[index - headwears.length - outerwears.length];
+    if (index < headwear.length) {
+      return headwear[index];
+    } else if (index < headwear.length + outerwear.length) {
+      return outerwear[index - headwear.length];
+    } else if (index < headwear.length + outerwear.length + tops.length) {
+      return tops[index - headwear.length - outerwear.length];
     } else if (index <
-        headwears.length + outerwears.length + tops.length + bottoms.length) {
-      return bottoms[
-          index - headwears.length - outerwears.length - tops.length];
+        headwear.length + outerwear.length + tops.length + bottoms.length) {
+      return bottoms[index - headwear.length - outerwear.length - tops.length];
     } else {
-      return footwears[index -
-          headwears.length -
-          outerwears.length -
+      return footwear[index -
+          headwear.length -
+          outerwear.length -
           tops.length -
           bottoms.length];
     }
