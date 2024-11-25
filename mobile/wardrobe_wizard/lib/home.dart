@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wardrobe_wizard/closet.dart';
 import 'package:wardrobe_wizard/outfits.dart';
-import 'package:wardrobe_wizard/profile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +15,6 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<Widget> _pages = <Widget>[
     Closet(title: "Closet"),
     Outfits(title: "Outfits"),
-    Profile(title: "Profile"),
   ];
 
   void _onItemTapped(int index) {
@@ -40,10 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.style),
             label: 'Outfits',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,

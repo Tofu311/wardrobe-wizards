@@ -65,6 +65,41 @@ class _DetailsState extends State<Details> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.delete),
+              color: Colors.red,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Delete Item'),
+                      content: const Text(
+                          'Are you sure you want to delete this item?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            deleteItem();
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }),
+        ],
       ),
       body: Center(
         child: Column(
@@ -88,17 +123,6 @@ class _DetailsState extends State<Details> {
                 textAlign: TextAlign.center,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ElevatedButton(
-                onPressed: deleteItem,
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.red),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                ),
-                child: const Text("Delete"),
-              ),
-            )
           ],
         ),
       ),

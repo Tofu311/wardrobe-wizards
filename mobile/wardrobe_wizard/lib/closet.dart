@@ -4,11 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:wardrobe_wizard/clothing.dart';
-import 'package:wardrobe_wizard/details.dart';
+import 'package:wardrobe_wizard/clothing_details.dart';
 import 'package:wardrobe_wizard/login.dart';
 
 class Closet extends StatefulWidget {
@@ -24,15 +23,10 @@ class _ClosetState extends State<Closet> {
   final List<Clothing> closetItems = [];
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   String selectedType = 'Sort By Type';
+  bool isLoading = false;
 
   Future<String?> getToken() async {
     return await storage.read(key: 'auth_token');
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchCloset();
   }
 
   Future<void> getImage() async {
@@ -116,6 +110,7 @@ class _ClosetState extends State<Closet> {
   }
 
   Future<void> fetchCloset() async {
+    setState(() => isLoading = true);
     try {
       final response = await get(
         Uri.parse('https://api.wardrobewizard.fashion/api/clothing'),
@@ -130,12 +125,15 @@ class _ClosetState extends State<Closet> {
           for (var item in data) {
             closetItems.add(Clothing.fromJson(item));
           }
+          isLoading = false;
         });
       } else {
+        setState(() => isLoading = false);
         throw Exception(
             'Failed to fetch closet items. Status: ${response.statusCode}');
       }
     } catch (error) {
+      setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -158,6 +156,12 @@ class _ClosetState extends State<Closet> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    fetchCloset();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -177,75 +181,78 @@ class _ClosetState extends State<Closet> {
         ],
       ),
       body: Center(
-        child: Column(
-          children: <Widget>[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-              child: Text("Welcome to your closet!",
-                  style: TextStyle(fontSize: 24)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: DropdownButton<String>(
-                value: selectedType,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedType = newValue!;
-                  });
-                },
-                items: <String>[
-                  'Sort By Type',
-                  'Headwear',
-                  'Top',
-                  'Outerwear',
-                  'Bottom',
-                  'Footwear'
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                ),
-                itemCount: getFilteredItems().length,
-                itemBuilder: (BuildContext context, int index) {
-                  final item = getFilteredItems()[index];
-                  return GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Details(
-                            title: 'Details',
-                            clothing: item,
-                          ),
-                        ),
-                      );
-                      if (result == true) {
-                        fetchCloset();
-                      }
-                    },
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.network(
-                          item.imagePath,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+        child: isLoading
+            ? const CircularProgressIndicator()
+            : Column(
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    child: Text("Welcome to your closet!",
+                        style: TextStyle(fontSize: 24)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: DropdownButton<String>(
+                      value: selectedType,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedType = newValue!;
+                        });
+                      },
+                      items: <String>[
+                        'Sort By Type',
+                        'Headwear',
+                        'Top',
+                        'Outerwear',
+                        'Bottom',
+                        'Footwear'
+                      ].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
-                  );
-                },
+                  ),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                      ),
+                      itemCount: getFilteredItems().length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final item = getFilteredItems()[index];
+                        return GestureDetector(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Details(
+                                  title: 'Details',
+                                  clothing: item,
+                                ),
+                              ),
+                            );
+                            if (result == true) {
+                              fetchCloset();
+                            }
+                          },
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Image.network(
+                                item.imagePath,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: getImage,
