@@ -1,5 +1,5 @@
-# Use an official Node runtime as a parent image
-FROM node:18
+# Build the Node.js backend
+FROM node:18 AS build
 
 # Set working directory
 WORKDIR /app
@@ -16,8 +16,31 @@ COPY api/. .
 # Build the TypeScript code
 RUN npm run build
 
-# Expose the port the app runs on
-EXPOSE 3000
 
-# Start the app with environment variables
-CMD ["sh", "-c", "OPENAI_API_KEY=$OPENAI_API_KEY REMOVE_BG_API_KEY=$REMOVE_BG_API_KEY DATABASE_URL=$DATABASE_URL JWT_SECRET=$JWT_SECRET WEATHER_API_KEY=$WEATHER_API_KEY SPACES_ENDPOINT=$SPACES_ENDPOINT DIGITAL_OCEAN_ACCESS_KEY=$DIGITAL_OCEAN_ACCESS_KEY DIGITAL_OCEAN_SECRET_KEY=$DIGITAL_OCEAN_SECRET_KEY npm start"]
+# Use Nginx as the runtime environment
+FROM nginx:alpine
+
+# Remove default Nginx configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built Node.js app
+COPY --from=build /app /app
+
+# Set environment variables for Node.js backend
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV REMOVE_BG_API_KEY=${REMOVE_BG_API_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
+ENV JWT_SECRET=${JWT_SECRET}
+ENV WEATHER_API_KEY=${WEATHER_API_KEY}
+ENV SPACES_ENDPOINT=${SPACES_ENDPOINT}
+ENV DIGITAL_OCEAN_ACCESS_KEY=${DIGITAL_OCEAN_ACCESS_KEY}
+ENV DIGITAL_OCEAN_SECRET_KEY=${DIGITAL_OCEAN_SECRET_KEY}
+
+# Expose the port for Nginx
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

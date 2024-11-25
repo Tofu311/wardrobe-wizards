@@ -8,8 +8,8 @@ import bodyParser from 'body-parser';
 const app = express();
 // Rerun workflow comment
 
-app.use(bodyParser.json({ limit: '50mb' })); // Increase the JSON payload limit
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); // For form data
+app.use(bodyParser.json({ limit: '20mb' })); // Increase the JSON payload limit
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: true })); // For form data
 
 // Routes
 app.use('/api/users', userRoutes);
